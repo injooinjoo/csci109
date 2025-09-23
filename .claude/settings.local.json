@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(mkdir:*)",
+      "Bash(pip install:*)",
+      "Bash(jupyter notebook:*)",
+      "Bash(pip --version)",
+      "Bash(python:*)",
+      "Bash(echo $VIRTUAL_ENV)",
+      "Bash(findstr:*)",
+      "mcp__ide__executeCode",
+      "Bash(venvScripts:*)",
+      "Bash(./venv/Scripts/activate)",
+      "Bash(python3.13:*)",
+      "Bash(winget:*)",
+      "Bash(py:*)",
+      "Bash(venvScriptsactivate.bat)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(venv313Scriptsactivate:*)",
+      "Bash(.venv313Scriptsactivate.bat)",
+      "Bash(venv313/Scripts/python -m pip install:*)",
+      "Bash(venv313/Scripts/python:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
