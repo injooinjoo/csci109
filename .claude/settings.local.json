@@ -22,7 +22,8 @@
       "Bash(.venv313Scriptsactivate.bat)",
       "Bash(venv313/Scripts/python -m pip install:*)",
       "Bash(venv313/Scripts/python:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
