@@ -1,0 +1,972 @@
+\documentclass[12pt]{article}
+\usepackage[utf-8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{kotex}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=1in}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CS109A Lecture 4}
+\lhead{Linear Regression}
+\rfoot{Page \thepage}
+
+\title{CS109A Lecture 4: Linear Regression\\다중 선형 회귀 (Multi-Linear Regression)}
+\author{Based on lectures by Pavlos Protopapas, Kevin Rader, and Chris Gumb}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{강의 개요 (Lecture Overview)}
+
+이번 강의에서는 선형 회귀(Linear Regression)를 심도 있게 다룹니다. 단순 선형 회귀에서 시작하여 다중 선형 회귀로 확장하고, 모델 파라미터의 해석, 스케일링, 공선성, 범주형 예측 변수 등 실전에서 중요한 주제들을 다룹니다.
+
+\subsection{주요 주제 (Main Topics)}
+\begin{enumerate}
+    \item 단순 선형 회귀 (Simple Linear Regression)
+    \item 다중 선형 회귀 (Multi-Linear Regression)
+    \item 모델 파라미터 해석 (Interpreting Model Parameters)
+    \item 스케일링 (Scaling)
+    \item 공선성 (Collinearity)
+    \item 범주형 예측 변수 (Qualitative Predictors)
+\end{enumerate}
+
+\section{단순 선형 회귀 복습 (Simple Linear Regression Review)}
+
+\subsection{선형 회귀의 기본 형태}
+
+단순 선형 회귀에서는 함수 $f$가 간단한 기본 형태를 가진다고 가정합니다:
+
+\begin{equation}
+f(x) = \beta_0 + \beta_1 x
+\end{equation}
+
+이는 예측 변수(predictor)와 반응 변수(response variable) 사이의 관계가 선형(linear)이라고 가정하는 것입니다.
+
+\subsection{핵심 개념 설명}
+
+\textbf{선형 관계 가정의 의미:}
+\begin{itemize}
+    \item $\beta_0$: y-절편 (intercept) - $x=0$일 때 $y$의 예측값
+    \item $\beta_1$: 기울기 (slope) - $x$가 1 단위 증가할 때 $y$의 변화량
+    \item 이 가정은 데이터가 직선 형태의 패턴을 따른다는 것을 의미합니다
+\end{itemize}
+
+\subsection{손실 함수: MSE (Mean Squared Error)}
+
+선형 회귀에서는 MSE를 손실 함수로 사용합니다:
+
+\begin{equation}
+\text{MSE}(\beta_0, \beta_1) = \frac{1}{n}\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1 x_i)^2
+\end{equation}
+
+\textbf{MSE를 선택하는 이유:}
+\begin{itemize}
+    \item 수학적으로 다루기 쉬움 (미분 가능)
+    \item 큰 오차에 더 큰 패널티 부여 (제곱 때문에)
+    \item 최적화가 효율적 (볼록 함수)
+    \item 통계적으로 좋은 특성 보유
+\end{itemize}
+
+\subsection{최적화: 폐쇄형 해 (Closed-Form Solution)}
+
+MSE를 최소화하는 $\beta_0$와 $\beta_1$을 찾기 위해 편미분을 사용합니다:
+
+\begin{align}
+\frac{\partial \text{MSE}}{\partial \beta_0} &= 0 \\
+\frac{\partial \text{MSE}}{\partial \beta_1} &= 0
+\end{align}
+
+이를 풀면 다음의 폐쇄형 해를 얻습니다:
+
+\begin{equation}
+\beta_1 = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^{n}(x_i - \bar{x})^2}
+\end{equation}
+
+\begin{equation}
+\beta_0 = \bar{y} - \beta_1\bar{x}
+\end{equation}
+
+여기서 $\bar{x}$와 $\bar{y}$는 각각 $x$와 $y$의 평균값입니다.
+
+\section{다중 선형 회귀 (Multi-Linear Regression)}
+
+\subsection{왜 여러 예측 변수를 사용하는가?}
+
+실제 문제에서는 반응 변수 $y$가 하나의 예측 변수에만 의존하는 경우가 드뭅니다. 예를 들어, 누군가의 키를 예측한다면:
+
+\begin{itemize}
+    \item \textbf{옵션 A}: 몸무게만 알려줌
+    \item \textbf{옵션 B}: 몸무게와 성별을 알려줌
+    \item \textbf{옵션 C}: 몸무게, 성별, 소득을 알려줌
+    \item \textbf{옵션 D}: 몸무게, 성별, 소득, 좋아하는 숫자를 알려줌
+\end{itemize}
+
+당연히 더 많은 정보가 있으면 좋습니다! 비록 키와 좋아하는 숫자가 강하게 연관되어 있지 않더라도, 최악의 경우 그 정보를 무시하면 됩니다.
+
+\subsection{고려사항 (Considerations)}
+
+\textbf{1. 데이터 노이즈 (Data Noise):}
+\begin{itemize}
+    \item 너무 많은 무관한 데이터가 패턴 감지를 어렵게 만들 수 있는가?
+    \item 이것이 overfitting 문제와 연결됩니다
+\end{itemize}
+
+\textbf{2. 윤리적 고려사항 (Ethical Considerations):}
+\begin{itemize}
+    \item 필요 이상의 데이터 수집과 관련된 프라이버시 문제가 있는가?
+    \item 데이터 최소화 원칙을 고려해야 합니다
+\end{itemize}
+
+\subsection{다중 선형 회귀의 수학적 형태}
+
+실제로 반응 변수 $y$는 여러 예측 변수 $x_1, x_2, \ldots, x_p$의 함수입니다. 다중 선형 회귀에서는 단순 선형 회귀와 유사한 형태를 가정합니다:
+
+\begin{equation}
+f(x_1, \ldots, x_p) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p
+\end{equation}
+
+\subsection{표기법 (Notation)}
+
+\textbf{벡터 표기:}
+\begin{itemize}
+    \item $\mathbf{y} = (y_1, \ldots, y_n)^T$: 반응 변수 벡터 (n개 관측값)
+    \item $\mathbf{X} = (\mathbf{x}_1, \ldots, \mathbf{x}_p)$: 설계 행렬 (Design Matrix)
+    \item $\mathbf{x}_j = (x_{1j}, \ldots, x_{nj})^T$: j번째 예측 변수의 모든 관측값
+    \item $\boldsymbol{\beta} = (\beta_0, \beta_1, \ldots, \beta_p)^T$: 계수 벡터
+\end{itemize}
+
+\subsection{설계 행렬 (Design Matrix)}
+
+광고 데이터 예제를 살펴봅시다:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+TV & Radio & Newspaper & Sales \\
+\hline
+230.1 & 37.8 & 69.2 & 22.1 \\
+44.5 & 39.3 & 45.1 & 10.4 \\
+17.2 & 45.9 & 69.3 & 9.3 \\
+151.5 & 41.3 & 58.5 & 18.5 \\
+180.8 & 10.8 & 58.4 & 12.9 \\
+\hline
+\end{tabular}
+\caption{광고 매체별 지출과 판매량}
+\end{table}
+
+이 데이터에 대한 모델:
+\begin{equation}
+\text{Sales} = \beta_0 + \beta_1 \times \text{TV} + \beta_2 \times \text{Radio} + \beta_3 \times \text{Newspaper}
+\end{equation}
+
+\subsection{선형 대수 표기 (Linear Algebra Notation)}
+
+설계 행렬 구성:
+\begin{equation}
+\mathbf{X} = \begin{pmatrix}
+1 & TV_1 & Radio_1 & News_1 \\
+1 & TV_2 & Radio_2 & News_2 \\
+\vdots & \vdots & \vdots & \vdots \\
+1 & TV_n & Radio_n & News_n
+\end{pmatrix}, \quad
+\boldsymbol{\beta} = \begin{pmatrix}
+\beta_0 \\
+\beta_1 \\
+\beta_2 \\
+\beta_3
+\end{pmatrix}, \quad
+\mathbf{y} = \begin{pmatrix}
+Sales_1 \\
+Sales_2 \\
+\vdots \\
+Sales_n
+\end{pmatrix}
+\end{equation}
+
+\textbf{주의:} 첫 번째 열이 모두 1인 것은 절편 $\beta_0$를 위한 것입니다!
+
+모델을 간결하게 표현하면:
+\begin{equation}
+\mathbf{y} = \mathbf{X}\boldsymbol{\beta}
+\end{equation}
+
+\section{다중 선형 회귀의 최적화}
+
+\subsection{MSE 손실 함수}
+
+벡터 표기법으로 MSE를 표현하면:
+
+\begin{equation}
+\text{MSE}(\boldsymbol{\beta}) = \frac{1}{n}\|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2
+\end{equation}
+
+이는 다음과 같이 확장됩니다:
+\begin{equation}
+\text{MSE}(\boldsymbol{\beta}) = \frac{1}{n}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^T(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})
+\end{equation}
+
+\subsection{행렬 미분 복습}
+
+\textbf{전치 행렬 (Transpose):}
+\begin{itemize}
+    \item 행과 열을 바꾸는 연산
+    \item $(\mathbf{X}^T)_{ij} = \mathbf{X}_{ji}$
+    \item Python에서: \texttt{np.transpose(X)} 또는 \texttt{X.T}
+\end{itemize}
+
+\textbf{역행렬 (Inverse):}
+\begin{itemize}
+    \item $\mathbf{A}\mathbf{A}^{-1} = \mathbf{I}$ (항등 행렬)
+    \item 숫자의 역수와 유사: $n \times \frac{1}{n} = 1$
+    \item Python에서: \texttt{np.linalg.inv(A)}
+    \item \textbf{주의:} 모든 행렬이 역행렬을 가지는 것은 아닙니다!
+\end{itemize}
+
+\subsection{2개의 예측 변수인 경우의 미분}
+
+간단한 예로 2개의 예측 변수만 고려하면:
+
+\begin{equation}
+\text{MSE}(\boldsymbol{\beta}) = (y_1 - \beta_0 - x_{11}\beta_1 - x_{12}\beta_2)^2 + (y_2 - \beta_0 - x_{21}\beta_1 - x_{22}\beta_2)^2 + \cdots
+\end{equation}
+
+각 $\beta$에 대해 편미분:
+
+\begin{align}
+\frac{\partial L}{\partial \beta_0} &= -2(y_1 - \beta_0 - x_{11}\beta_1 - x_{12}\beta_2) - 2(y_2 - \beta_0 - x_{21}\beta_1 - x_{22}\beta_2) - \cdots \\
+\frac{\partial L}{\partial \beta_1} &= -2x_{11}(y_1 - \beta_0 - x_{11}\beta_1 - x_{12}\beta_2) - 2x_{21}(y_2 - \beta_0 - x_{21}\beta_1 - x_{22}\beta_2) - \cdots \\
+\frac{\partial L}{\partial \beta_2} &= -2x_{12}(y_1 - \beta_0 - x_{11}\beta_1 - x_{12}\beta_2) - 2x_{22}(y_2 - \beta_0 - x_{21}\beta_1 - x_{22}\beta_2) - \cdots
+\end{align}
+
+\subsection{벡터 형태로 정리}
+
+이를 벡터 형태로 정리하면:
+
+\begin{equation}
+\frac{\partial L}{\partial \boldsymbol{\beta}} = -2\mathbf{X}^T(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})
+\end{equation}
+
+구체적으로:
+\begin{equation}
+\begin{pmatrix}
+\frac{\partial L}{\partial \beta_0} \\
+\frac{\partial L}{\partial \beta_1} \\
+\frac{\partial L}{\partial \beta_2}
+\end{pmatrix} = -2 \begin{pmatrix}
+1 & 1 & \cdots \\
+x_{11} & x_{21} & \cdots \\
+x_{12} & x_{22} & \cdots
+\end{pmatrix} \begin{pmatrix}
+y_1 - \beta_0 - x_{11}\beta_1 - x_{12}\beta_2 \\
+y_2 - \beta_0 - x_{21}\beta_1 - x_{22}\beta_2 \\
+\vdots
+\end{pmatrix}
+\end{equation}
+
+\subsection{폐쇄형 해 유도 (Closed-Form Solution Derivation)}
+
+최적화를 위해 편미분을 0으로 설정:
+
+\begin{equation}
+\frac{\partial L}{\partial \boldsymbol{\beta}} = 0 \Rightarrow -2\mathbf{X}^T(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) = 0
+\end{equation}
+
+이를 정리하면:
+\begin{align}
+\mathbf{X}^T(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) &= 0 \\
+\mathbf{X}^T\mathbf{y} - \mathbf{X}^T\mathbf{X}\boldsymbol{\beta} &= 0 \\
+\mathbf{X}^T\mathbf{X}\boldsymbol{\beta} &= \mathbf{X}^T\mathbf{y}
+\end{align}
+
+양변에 $(\mathbf{X}^T\mathbf{X})^{-1}$를 곱하면:
+
+\begin{equation}
+(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{X}\boldsymbol{\beta} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+\end{equation}
+
+\textbf{최종 폐쇄형 해:}
+\begin{equation}
+\boxed{\hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y} = \arg\min_{\boldsymbol{\beta}} \text{MSE}(\boldsymbol{\beta})}
+\end{equation}
+
+\subsection{Python 구현}
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+# 데이터 준비
+X = ... # 설계 행렬 (n x p+1, 첫 열은 1)
+y = ... # 반응 변수 (n x 1)
+
+# 폐쇄형 해 계산
+X_sq = X.T @ X  # X^T X 계산
+X_inv = np.linalg.inv(X_sq)  # (X^T X)^{-1} 계산
+beta_hat = X_inv @ (X.T @ y)  # 최종 계수
+
+print("추정된 계수:", beta_hat)
+\end{lstlisting}
+
+\subsection{sklearn을 사용한 구현}
+
+실제로는 sklearn을 사용하는 것이 더 편리합니다:
+
+\begin{lstlisting}[language=Python]
+from sklearn.linear_model import LinearRegression
+
+# 모델 생성
+model = LinearRegression()
+
+# 모델 훈련 (fit)
+model.fit(X, y)
+
+# 계수 확인
+print("절편:", model.intercept_)
+print("기울기:", model.coef_)
+
+# 예측
+y_pred = model.predict(X)
+\end{lstlisting}
+
+\textbf{주의:} sklearn의 LinearRegression은 내부적으로 위의 폐쇄형 해를 사용합니다!
+
+\section{모델 파라미터 해석 (Interpreting Model Parameters)}
+
+\subsection{단순 선형 회귀에서의 해석}
+
+단순 선형 회귀 $y = \beta_0 + \beta_1 x$에서:
+
+\begin{itemize}
+    \item \textbf{$\beta_0$ (절편):} $x=0$일 때 $y$의 예측값
+    \item \textbf{$\beta_1$ (기울기):} $x$가 1 단위 증가할 때 $y$의 변화량
+\end{itemize}
+
+\textbf{예제:} $y = 5 + 3x$
+\begin{itemize}
+    \item $x=0$일 때 $y=5$
+    \item $x$가 1 증가하면 $y$는 3 증가
+\end{itemize}
+
+\subsection{다중 선형 회귀에서의 해석}
+
+다중 선형 회귀에서는 해석이 더 복잡합니다:
+
+\begin{equation}
+y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p
+\end{equation}
+
+\textbf{계수의 의미:}
+\begin{itemize}
+    \item $\beta_j$: \textbf{다른 모든 변수를 고정했을 때}, $x_j$가 1 단위 증가할 때 $y$의 변화량
+    \item 이것이 "holding all other variables constant"의 의미입니다
+\end{itemize}
+
+\subsection{특성 중요도 (Feature Importance)}
+
+예측 변수가 많을 때 ($x_1, \ldots, x_J$), 계수 $\beta_1, \ldots, \beta_J$를 일일이 보는 것은 비실용적입니다.
+
+\textbf{해결책:} 특성 중요도 그래프 (Feature Importance Graph)
+\begin{itemize}
+    \item $|\beta_j|$의 크기를 시각화
+    \item 어떤 예측 변수가 모델 예측에 가장 큰 영향을 미치는지 보여줌
+    \item 막대 그래프 형태로 표현
+\end{itemize}
+
+\textbf{주의사항:}
+\begin{itemize}
+    \item 계수의 크기는 변수의 스케일에 영향을 받습니다
+    \item 공정한 비교를 위해서는 스케일링이 필요합니다
+\end{itemize}
+
+\section{스케일링 (Scaling)}
+
+\subsection{스케일링이 필요한 이유}
+
+예측 변수들이 다른 스케일을 가질 때:
+\begin{itemize}
+    \item 키 (cm): 150-200 범위
+    \item 소득 (\$): 20,000-200,000 범위
+    \item 나이 (년): 20-80 범위
+\end{itemize}
+
+이런 경우 계수의 크기만으로 중요도를 비교하면 잘못된 결론을 내릴 수 있습니다.
+
+\subsection{표준화 (Standardization / Z-Score)}
+
+각 변수를 평균 0, 표준편차 1로 변환:
+
+\begin{equation}
+x_{\text{standardized}} = \frac{x - \text{mean}(x)}{\text{std}(x)}
+\end{equation}
+
+\textbf{특징:}
+\begin{itemize}
+    \item 평균 = 0, 표준편차 = 1
+    \item 정규분포 모양 유지
+    \item 이상치에 민감
+\end{itemize}
+
+\subsection{정규화 (Normalization / Min-Max Scaling)}
+
+각 변수를 0과 1 사이로 변환:
+
+\begin{equation}
+x_{\text{normalized}} = \frac{x - \min(x)}{\max(x) - \min(x)}
+\end{equation}
+
+\textbf{특징:}
+\begin{itemize}
+    \item 범위 = [0, 1]
+    \item 분포 모양 유지
+    \item 이상치에 매우 민감
+\end{itemize}
+
+\subsection{스케일링의 효과}
+
+\textbf{스케일링 후:}
+\begin{itemize}
+    \item 모든 변수가 같은 스케일
+    \item 계수의 크기로 직접 중요도 비교 가능
+    \item 특성 중요도 그래프가 의미있음
+    \item 경사하강법 등의 최적화 알고리즘이 더 빠르게 수렴
+\end{itemize}
+
+\subsection{Python 구현}
+
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+# 표준화
+scaler = StandardScaler()
+X_standardized = scaler.fit_transform(X)
+
+# 정규화
+scaler = MinMaxScaler()
+X_normalized = scaler.fit_transform(X)
+
+# 수동 구현
+X_standardized = (X - X.mean()) / X.std()
+X_normalized = (X - X.min()) / (X.max() - X.min())
+\end{lstlisting}
+
+\section{공선성 (Collinearity)}
+
+\subsection{공선성이란?}
+
+\textbf{정의:} 회귀 모델에서 두 개 이상의 예측 변수가 서로 높은 상관관계를 가지는 상황
+
+\begin{equation}
+\text{Corr}(x_i, x_j) \text{가 1에 가까운 경우}
+\end{equation}
+
+\subsection{공선성의 영향}
+
+\textbf{1. 모델 해석의 어려움:}
+\begin{itemize}
+    \item 각 예측 변수의 개별적 효과를 파악하기 어려움
+    \item 계수가 불안정해짐 (데이터 약간 변화에도 크게 달라짐)
+    \item 계수의 표준 오차가 증가
+\end{itemize}
+
+\textbf{2. 계수의 신뢰도 감소:}
+\begin{itemize}
+    \item 계수 추정의 불확실성 증가
+    \item 통계적 유의성 판단이 어려워짐
+\end{itemize}
+
+\textbf{3. 예측 성능:}
+\begin{itemize}
+    \item 예측 자체는 크게 영향받지 않음!
+    \item 하지만 변수 선택이 어려워짐
+\end{itemize}
+
+\subsection{공선성 예제: 신용 데이터}
+
+신용한도(Limit)와 신용등급(Rating)이 높은 상관관계를 가지는 경우:
+
+\textbf{모델 1 (두 변수 모두 포함):}
+\begin{equation}
+\text{Balance} = \beta_0 + \beta_1 \times \text{Limit} + \beta_2 \times \text{Rating} + \cdots
+\end{equation}
+
+계수 예시:
+\begin{itemize}
+    \item $\beta_1 = 0.193$ (Limit)
+    \item $\beta_2 = 1.102$ (Rating)
+\end{itemize}
+
+\textbf{모델 2 (Limit 제거):}
+\begin{equation}
+\text{Balance} = \beta_0 + \beta_2 \times \text{Rating} + \cdots
+\end{equation}
+
+계수 변화:
+\begin{itemize}
+    \item $\beta_2 = 3.976$ (Rating) - 크게 증가!
+\end{itemize}
+
+\textbf{해석:}
+\begin{itemize}
+    \item 두 모델의 예측 성능은 거의 동일
+    \item 하지만 계수가 크게 달라짐
+    \item 이것이 공선성의 문제점
+\end{itemize}
+
+\subsection{공선성 진단}
+
+\textbf{1. 상관계수 행렬 (Correlation Matrix):}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 상관계수 계산
+corr_matrix = df.corr()
+
+# 히트맵으로 시각화
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.show()
+\end{lstlisting}
+
+\textbf{2. VIF (Variance Inflation Factor):}
+\begin{itemize}
+    \item VIF > 10: 심각한 공선성
+    \item VIF > 5: 주의 필요
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# VIF 계산
+vif_data = pd.DataFrame()
+vif_data["feature"] = X.columns
+vif_data["VIF"] = [variance_inflation_factor(X.values, i)
+                   for i in range(len(X.columns))]
+print(vif_data)
+\end{lstlisting}
+
+\subsection{공선성 해결 방법}
+
+\textbf{1. 변수 제거:}
+\begin{itemize}
+    \item 상관관계가 높은 변수 중 하나 제거
+    \item 도메인 지식을 활용한 선택
+\end{itemize}
+
+\textbf{2. 차원 축소:}
+\begin{itemize}
+    \item PCA (주성분 분석) 사용
+    \item 변수들을 선형결합으로 변환
+\end{itemize}
+
+\textbf{3. 정규화 (Regularization):}
+\begin{itemize}
+    \item Ridge Regression (L2)
+    \item Lasso Regression (L1)
+    \item 다음 강의에서 다룰 예정
+\end{itemize}
+
+\section{범주형 예측 변수 (Qualitative Predictors)}
+
+\subsection{범주형 변수의 필요성}
+
+지금까지는 모든 변수가 양적(quantitative)이라고 가정했습니다. 하지만 실제로는 질적(qualitative) 변수도 많습니다.
+
+\textbf{예제: 신용 데이터}
+\begin{itemize}
+    \item 성별 (Sex): Male, Female
+    \item 학생 여부 (Student): Yes, No
+    \item 결혼 여부 (Married): Yes, No
+    \item 인종 (Ethnicity): Asian, Caucasian, African American
+\end{itemize}
+
+\subsection{이진 변수 (Binary Variables)}
+
+두 개의 값만 가지는 경우, 더미 변수(dummy variable) 또는 지시 변수(indicator variable)를 생성:
+
+\textbf{성별 인코딩:}
+\begin{equation}
+x_i = \begin{cases}
+1 & \text{if } i\text{번째 사람이 여성} \\
+0 & \text{if } i\text{번째 사람이 남성}
+\end{cases}
+\end{equation}
+
+\textbf{모델:}
+\begin{equation}
+y_i = \beta_0 + \beta_1 x_i = \begin{cases}
+\beta_0 + \beta_1 & \text{if } i\text{번째 사람이 여성} \\
+\beta_0 & \text{if } i\text{번째 사람이 남성}
+\end{cases}
+\end{equation}
+
+\textbf{해석:}
+\begin{itemize}
+    \item $\beta_0$: 남성의 평균 balance
+    \item $\beta_0 + \beta_1$: 여성의 평균 balance
+    \item $\beta_1$: 여성과 남성의 평균 차이
+\end{itemize}
+
+\subsection{다중 범주 변수 (Multi-level Categorical Variables)}
+
+3개 이상의 값을 가지는 경우, 원-핫 인코딩(one-hot encoding) 사용:
+
+\textbf{인종 변수 (Asian, Caucasian, African American):}
+
+\begin{align}
+x_{i,1} &= \begin{cases}
+1 & \text{if } i\text{번째 사람이 Asian} \\
+0 & \text{if } i\text{번째 사람이 not Asian}
+\end{cases} \\
+x_{i,2} &= \begin{cases}
+1 & \text{if } i\text{번째 사람이 Caucasian} \\
+0 & \text{if } i\text{번째 사람이 not Caucasian}
+\end{cases}
+\end{align}
+
+\textbf{주의:} $k$개의 범주에 대해 $k-1$개의 더미 변수만 필요합니다!
+
+\textbf{모델:}
+\begin{equation}
+y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} = \begin{cases}
+\beta_0 + \beta_1 & \text{if Asian} \\
+\beta_0 + \beta_2 & \text{if Caucasian} \\
+\beta_0 & \text{if African American}
+\end{cases}
+\end{equation}
+
+\textbf{해석:}
+\begin{itemize}
+    \item $\beta_0$: African American의 평균 balance (기준 범주)
+    \item $\beta_1$: Asian과 African American의 차이
+    \item $\beta_2$: Caucasian과 African American의 차이
+\end{itemize}
+
+\subsection{Python 구현}
+
+\textbf{1. Pandas를 사용한 더미 변수 생성:}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# 더미 변수 생성 (첫 번째 범주 제거)
+df_encoded = pd.get_dummies(df, columns=['Ethnicity'],
+                            drop_first=True)
+
+# 결과 확인
+print(df_encoded.head())
+\end{lstlisting}
+
+\textbf{2. sklearn을 사용한 인코딩:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import OneHotEncoder
+
+encoder = OneHotEncoder(drop='first', sparse=False)
+ethnicity_encoded = encoder.fit_transform(df[['Ethnicity']])
+
+# 결과를 DataFrame으로
+df_encoded = pd.DataFrame(ethnicity_encoded,
+                         columns=encoder.get_feature_names_out())
+\end{lstlisting}
+
+\subsection{더미 변수 함정 (Dummy Variable Trap)}
+
+\textbf{문제:} 모든 범주에 대해 더미 변수를 만들면 완벽한 다중공선성 발생!
+
+\begin{equation}
+x_{i,1} + x_{i,2} + x_{i,3} = 1 \text{ (항상)}
+\end{equation}
+
+이는 절편항(모두 1인 열)과 선형 종속 관계입니다.
+
+\textbf{해결:}
+\begin{itemize}
+    \item $k$개 범주 → $k-1$개 더미 변수 사용
+    \item 하나의 범주를 기준(reference) 범주로 설정
+    \item 또는 절편을 제거 (비권장)
+\end{itemize}
+
+\section{선형성 가정 검증 (Verifying Linearity Assumption)}
+
+\subsection{기본 가정들}
+
+선형 회귀에서 가정하는 것들:
+\begin{enumerate}
+    \item \textbf{선형성:} $X$와 $Y$ 사이의 관계가 선형
+    \item \textbf{독립성:} 잔차 $r_i = y_i - \hat{y}_i$가 서로 독립
+    \item \textbf{등분산성:} 잔차의 분산이 일정
+    \item \textbf{정규성:} 잔차가 정규분포를 따름
+\end{enumerate}
+
+\subsection{잔차 분석 (Residual Analysis)}
+
+\textbf{잔차:}
+\begin{equation}
+r_i = y_i - \hat{y}_i = y_i - (\beta_0 + \beta_1 x_i)
+\end{equation}
+
+\textbf{진단 플롯 (Diagnostic Plots):}
+
+\textbf{1. 잔차 대 예측값 플롯 (Residuals vs Fitted):}
+\begin{itemize}
+    \item x축: 예측값 $\hat{y}$
+    \item y축: 잔차 $r$
+    \item \textbf{좋은 경우:} 패턴 없이 무작위로 분포
+    \item \textbf{나쁜 경우:} 명확한 패턴 존재 (곡선, 깔때기 모양 등)
+\end{itemize}
+
+\textbf{2. Q-Q 플롯 (Normal Q-Q):}
+\begin{itemize}
+    \item 잔차의 정규성 검증
+    \item \textbf{좋은 경우:} 점들이 대각선에 가까움
+    \item \textbf{나쁜 경우:} 대각선에서 크게 벗어남
+\end{itemize}
+
+\textbf{3. Scale-Location 플롯:}
+\begin{itemize}
+    \item 등분산성 검증
+    \item \textbf{좋은 경우:} 수평선 주변에 무작위 분포
+    \item \textbf{나쁜 경우:} 깔때기 모양 또는 증가/감소 추세
+\end{itemize}
+
+\subsection{Python 구현}
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import stats
+
+# 모델 학습
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+model.fit(X, y)
+
+# 예측 및 잔차 계산
+y_pred = model.predict(X)
+residuals = y - y_pred
+
+# 1. 잔차 대 예측값 플롯
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 3, 1)
+plt.scatter(y_pred, residuals, alpha=0.5)
+plt.axhline(y=0, color='r', linestyle='--')
+plt.xlabel('Fitted values')
+plt.ylabel('Residuals')
+plt.title('Residuals vs Fitted')
+
+# 2. Q-Q 플롯
+plt.subplot(1, 3, 2)
+stats.probplot(residuals, dist="norm", plot=plt)
+plt.title('Normal Q-Q')
+
+# 3. 잔차 히스토그램
+plt.subplot(1, 3, 3)
+plt.hist(residuals, bins=30, edgecolor='black', alpha=0.7)
+plt.xlabel('Residuals')
+plt.ylabel('Frequency')
+plt.title('Histogram of Residuals')
+
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+
+\subsection{비선형성 발견 시 대응}
+
+\textbf{1. 변수 변환:}
+\begin{itemize}
+    \item 로그 변환: $\log(y)$, $\log(x)$
+    \item 제곱근 변환: $\sqrt{y}$, $\sqrt{x}$
+    \item 다항식 특성: $x^2$, $x^3$ 추가
+\end{itemize}
+
+\textbf{2. 비선형 모델 사용:}
+\begin{itemize}
+    \item 다항 회귀 (Polynomial Regression)
+    \item 스플라인 (Splines)
+    \item 일반화 가법 모델 (GAM)
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import PolynomialFeatures
+
+# 다항식 특성 생성 (2차)
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X)
+
+# 다항 회귀 모델 학습
+model_poly = LinearRegression()
+model_poly.fit(X_poly, y)
+\end{lstlisting}
+
+\section{요약 및 핵심 포인트}
+
+\subsection{다중 선형 회귀의 핵심}
+
+\begin{enumerate}
+    \item \textbf{모델 형태:}
+    \begin{equation}
+    y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p + \epsilon
+    \end{equation}
+
+    \item \textbf{폐쇄형 해:}
+    \begin{equation}
+    \hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+    \end{equation}
+
+    \item \textbf{계수 해석:} 다른 변수 고정 시 각 변수의 효과
+
+    \item \textbf{스케일링:} 공정한 비교를 위해 필수
+
+    \item \textbf{공선성:} 해석을 어렵게 하지만 예측은 괜찮음
+
+    \item \textbf{범주형 변수:} 더미 변수로 인코딩 ($k$ 범주 → $k-1$ 더미)
+
+    \item \textbf{가정 검증:} 잔차 분석으로 확인
+\end{enumerate}
+
+\subsection{실전 체크리스트}
+
+\begin{enumerate}
+    \item 데이터 탐색 및 시각화
+    \item 범주형 변수 인코딩
+    \item 스케일링 적용
+    \item 모델 학습
+    \item 공선성 확인 (상관계수, VIF)
+    \item 잔차 분석으로 가정 검증
+    \item 필요시 변환 또는 비선형 모델 고려
+    \item 모델 해석 및 보고
+\end{enumerate}
+
+\subsection{다음 강의 예고}
+
+다음 강의에서는 다음 주제들을 다룰 예정입니다:
+\begin{itemize}
+    \item 모델 평가 지표 (R², Adjusted R², etc.)
+    \item 과적합과 과소적합
+    \item 정규화 (Ridge, Lasso)
+    \item 교차 검증
+    \item 통계적 추론 (가설 검정, 신뢰 구간)
+\end{itemize}
+
+\section{연습 문제}
+
+\subsection{개념 확인 문제}
+
+\textbf{문제 1:} 다음 중 선형 회귀의 계수 $\beta_1$의 의미로 올바른 것은?
+\begin{enumerate}[label=(\alph*)]
+    \item $x=0$일 때 $y$의 예측값
+    \item 다른 변수를 고정했을 때 $x_1$이 1 단위 증가할 때 $y$의 변화량
+    \item $y$의 분산
+    \item 잔차의 평균
+\end{enumerate}
+
+\textbf{문제 2:} 3개의 범주(A, B, C)를 가진 범주형 변수를 인코딩할 때 필요한 더미 변수의 개수는?
+\begin{enumerate}[label=(\alph*)]
+    \item 1개
+    \item 2개
+    \item 3개
+    \item 4개
+\end{enumerate}
+
+\textbf{문제 3:} 공선성이 심할 때 나타나는 현상으로 올바른 것은?
+\begin{enumerate}[label=(\alph*)]
+    \item 예측 성능이 크게 나빠짐
+    \item 계수 추정이 불안정해짐
+    \item 모델 학습이 불가능해짐
+    \item 잔차가 증가함
+\end{enumerate}
+
+\subsection{실습 문제}
+
+\textbf{문제 4:} 다음 데이터에 대해 다중 선형 회귀 모델을 구축하시오.
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+
+# 데이터 생성
+np.random.seed(42)
+n = 100
+X1 = np.random.normal(50, 10, n)
+X2 = np.random.normal(30, 5, n)
+y = 3 + 2*X1 + 1.5*X2 + np.random.normal(0, 5, n)
+
+# TODO:
+# 1. 데이터를 스케일링하시오
+# 2. 선형 회귀 모델을 학습하시오
+# 3. 계수를 출력하시오
+# 4. 잔차 플롯을 그리시오
+\end{lstlisting}
+
+\textbf{문제 5:} 범주형 변수가 포함된 데이터 처리
+
+\begin{lstlisting}[language=Python]
+# 데이터
+data = {
+    'Size': [1500, 1800, 2000, 1600, 2200],
+    'Location': ['Urban', 'Suburban', 'Urban', 'Rural', 'Suburban'],
+    'Price': [300, 340, 380, 310, 420]
+}
+df = pd.DataFrame(data)
+
+# TODO:
+# 1. Location 변수를 더미 변수로 인코딩하시오
+# 2. 선형 회귀 모델을 학습하시오
+# 3. 각 Location의 평균 가격 차이를 계산하시오
+\end{lstlisting}
+
+\section{참고 문헌 및 추가 자료}
+
+\subsection{교재}
+\begin{itemize}
+    \item James, G., Witten, D., Hastie, T., \& Tibshirani, R. (2013). \textit{An Introduction to Statistical Learning}. Springer.
+    \item Hastie, T., Tibshirani, R., \& Friedman, J. (2009). \textit{The Elements of Statistical Learning}. Springer.
+\end{itemize}
+
+\subsection{온라인 자료}
+\begin{itemize}
+    \item scikit-learn documentation: \url{https://scikit-learn.org/stable/modules/linear_model.html}
+    \item statsmodels documentation: \url{https://www.statsmodels.org/}
+\end{itemize}
+
+\subsection{추가 학습 주제}
+\begin{itemize}
+    \item Ridge Regression (L2 regularization)
+    \item Lasso Regression (L1 regularization)
+    \item Elastic Net
+    \item Polynomial Regression
+    \item Generalized Linear Models (GLM)
+    \item Mixed Effects Models
+\end{itemize}
+
+\end{document}

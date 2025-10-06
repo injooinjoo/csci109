@@ -1,0 +1,791 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf-8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CS109A Lecture 3}
+\lhead{Introduction to Regression - kNN}
+\rfoot{Page \thepage}
+
+\title{\textbf{CS109A Introduction to Data Science\\Lecture 3: Introduction to Regression - k-Nearest Neighbors}}
+\author{Pavlos Protopapas, Kevin Rader, and Chris Gumb}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{강의 개요 (Lecture Outline)}
+
+이번 강의는 두 파트로 구성됩니다:
+
+\textbf{Part A: Statistical Modeling (통계적 모델링)}
+\begin{itemize}
+    \item k-Nearest Neighbors (kNN) 알고리즘
+\end{itemize}
+
+\textbf{Part B: Model Fitness (모델 적합도)}
+\begin{itemize}
+    \item 모델의 예측 성능 평가 방법
+    \item 서로 다른 모델 간의 비교 방법
+\end{itemize}
+
+\section{모델링의 시작 (Getting Started with Modeling)}
+
+\subsection{예측 문제 (Predicting a Variable)}
+
+데이터 과학에서 우리는 종종 다른 변수들을 기반으로 특정 변수의 값을 \textbf{예측(predict)}하고자 합니다.
+
+\textbf{실생활 예시:}
+
+\begin{enumerate}
+    \item \textbf{TikTok 조회수 예측:}
+    \begin{itemize}
+        \item 다음 주 TikTok 비디오가 받을 조회수 예측
+        \item 예측 요인: 비디오 길이, 게시 날짜, 이전 조회수
+    \end{itemize}
+
+    \item \textbf{Netflix 추천 시스템:}
+    \begin{itemize}
+        \item 사용자가 높게 평가할 영화 예측
+        \item 예측 요인: 이전 영화 평가, 인구통계 데이터
+    \end{itemize}
+\end{enumerate}
+
+\subsection{실습 데이터: Advertising 데이터셋}
+
+이번 강의에서는 \textbf{Advertising 데이터셋}을 사용합니다.
+
+\textbf{데이터 구조:}
+\begin{itemize}
+    \item 200개의 시장(markets) 데이터
+    \item 특정 제품의 판매량 (1000 단위)
+    \item 세 가지 미디어 채널의 광고 예산 (\$1000 단위):
+    \begin{itemize}
+        \item TV
+        \item Radio (라디오)
+        \item Newspaper (신문)
+    \end{itemize}
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{TV} & \textbf{radio} & \textbf{newspaper} & \textbf{sales} \\
+\hline
+230.1 & 37.8 & 69.2 & 22.1 \\
+44.5 & 39.3 & 45.1 & 10.4 \\
+17.2 & 45.9 & 69.3 & 9.3 \\
+151.5 & 41.3 & 58.5 & 18.5 \\
+180.8 & 10.8 & 58.4 & 12.9 \\
+\hline
+\end{tabular}
+\caption{Advertising 데이터셋 예시}
+\end{table}
+
+\section{반응변수와 예측변수 (Response and Predictor Variables)}
+
+\subsection{변수의 비대칭성 (Variable Asymmetry)}
+
+많은 예측 문제에서 변수들 사이에는 \textbf{비대칭성(asymmetry)}이 존재합니다:
+
+\begin{itemize}
+    \item 어떤 변수는 측정하기 어렵거나 더 중요함
+    \item 어떤 변수는 다른 변수들에 의해 직간접적으로 영향을 받음
+\end{itemize}
+
+\textbf{Advertising 데이터의 경우:}
+\begin{itemize}
+    \item \textbf{Sales (판매량)}: 예측하고자 하는 변수 - 광고 예산에 영향을 받음
+    \item \textbf{TV, Radio, Newspaper}: 예측에 사용하는 변수들
+\end{itemize}
+
+\subsection{변수 분류 (Variable Classification)}
+
+따라서 변수를 두 가지 범주로 분류합니다:
+
+\begin{enumerate}
+    \item \textbf{예측하고자 하는 변수} (Variables whose values we aim to predict)
+    \item \textbf{예측에 사용하는 입력 변수} (Variables used as inputs to inform our prediction)
+\end{enumerate}
+
+\subsection{용어 정리 (Terminology)}
+
+\subsubsection{반응변수 (Response Variable)}
+
+예측하고자 하는 변수를 다음과 같이 부릅니다:
+
+\begin{itemize}
+    \item \textbf{반응변수 (Response variable)} - 주로 사용
+    \item 종속변수 (Dependent variable)
+    \item 결과 (Outcome)
+    \item 타겟 (Target)
+\end{itemize}
+
+\textbf{표기:} $y$ 또는 $\mathbf{y}$ (벡터)
+
+\subsubsection{예측변수 (Predictor Variables)}
+
+예측에 사용하는 변수들을 다음과 같이 부릅니다:
+
+\begin{itemize}
+    \item \textbf{예측변수 (Predictors)} - 주로 사용
+    \item 특징 (Features)
+    \item 공변량 (Covariates)
+    \item 독립변수 (Independent variables)
+\end{itemize}
+
+\textbf{표기:} $X$ (대문자는 행렬), $x$ (소문자는 벡터)
+
+\subsection{수학적 표현 (Mathematical Representation)}
+
+\subsubsection{반응변수 벡터}
+
+$n$개의 관측값(observations)에 대해:
+
+\begin{equation}
+y = (y_1, y_2, \ldots, y_n)
+\end{equation}
+
+여기서:
+\begin{itemize}
+    \item $n$: 관측값(또는 레코드)의 개수
+    \item $y_i$: $i$번째 관측값의 반응변수 값
+\end{itemize}
+
+\subsubsection{예측변수 행렬 (Design Matrix)}
+
+$p$개의 예측변수를 가진 $n$개의 관측값에 대해:
+
+\begin{equation}
+X = \begin{pmatrix}
+x_{11} & x_{12} & \cdots & x_{1p} \\
+x_{21} & x_{22} & \cdots & x_{2p} \\
+\vdots & \vdots & \ddots & \vdots \\
+x_{n1} & x_{n2} & \cdots & x_{np}
+\end{pmatrix}
+\end{equation}
+
+여기서:
+\begin{itemize}
+    \item $n$: 관측값(행)의 개수
+    \item $p$: 예측변수(열)의 개수
+    \item $x_{ij}$: $i$번째 관측값의 $j$번째 예측변수 값
+\end{itemize}
+
+\textbf{이 행렬을 다음과 같이 부릅니다:}
+\begin{itemize}
+    \item \textbf{설계 행렬 (Design Matrix)} - 주로 사용
+    \item 데이터 행렬 (Data Matrix)
+\end{itemize}
+
+\subsubsection{표기 규칙 (Notation Conventions)}
+
+\begin{itemize}
+    \item \textbf{대문자 (Capital letters)}: 행렬을 나타냄 (예: $X$)
+    \item \textbf{소문자 (Lowercase letters)}: 벡터를 나타냄 (예: $y$, $x$)
+\end{itemize}
+
+\subsection{Pandas와 sklearn에서의 차원}
+
+Python에서 데이터를 다룰 때 차원(dimensions)을 올바르게 이해하는 것이 중요합니다.
+
+\subsubsection{X의 shape}
+
+\begin{lstlisting}[language=Python]
+>>> X.shape
+(n, p)
+\end{lstlisting}
+
+\begin{itemize}
+    \item $n$ 개의 행 (관측값)
+    \item $p$ 개의 열 (예측변수)
+\end{itemize}
+
+\subsubsection{y의 shape}
+
+\begin{lstlisting}[language=Python]
+>>> y.shape
+(n,) OR (n, 1)
+\end{lstlisting}
+
+\textbf{차이점:}
+\begin{itemize}
+    \item \texttt{(n,)}: 1차원 배열 (pandas Series)
+    \item \texttt{(n, 1)}: 2차원 배열 (NumPy array)
+\end{itemize}
+
+\subsubsection{단일 예측변수의 경우}
+
+예측변수가 하나만 있을 때:
+
+\begin{lstlisting}[language=Python]
+>>> X.shape
+(n,) OR (n, 1)
+\end{lstlisting}
+
+\textbf{주의:} sklearn은 2차원 형태 \texttt{(n, 1)}을 선호합니다!
+
+\section{통계 모델 (Statistical Model)}
+
+\subsection{완벽한 모델 vs 통계 모델}
+
+\subsubsection{아이스크림 비유}
+
+\textbf{완벽한 모델 (True Model):}
+\begin{quote}
+모든 맛, 토핑, 소용돌이를 완벽하게 담은 아이스크림 콘과 같습니다.
+\end{quote}
+
+\textbf{현실:}
+\begin{itemize}
+    \item 현실은 무한한 맛과 토핑을 가진 아이스크림 가게와 같음
+    \item 모든 것을 하나의 콘에 담는 것은 불가능
+\end{itemize}
+
+\textbf{통계 모델 (Statistical Model):}
+\begin{quote}
+불가능한 완벽함을 추구하는 대신, 우리가 가진 재료로 맛있는 아이스크림을 만듭니다.
+\end{quote}
+
+\subsection{수학적 정의}
+
+\subsubsection{완벽한 관계 (True Relationship)}
+
+반응변수 $Y$가 예측변수 $X$와 다음의 알 수 없는 함수를 통해 연결되어 있다고 가정:
+
+\begin{equation}
+Y = f(X) + \varepsilon
+\end{equation}
+
+여기서:
+\begin{itemize}
+    \item $f$: $Y$를 $X$와 연결하는 \textbf{알 수 없는 함수}
+    \item $\varepsilon$ (엡실론): \textbf{오차항 (error term)}
+    \begin{itemize}
+        \item $X$와 무관한 랜덤한 양
+        \item $Y$가 $f(X)$에서 벗어나는 정도
+        \item 측정 오차, 확률성 등을 포함
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{통계 모델의 정의}
+
+\textbf{통계 모델 (Statistical Model)}은 $f$를 추정하는 모든 알고리즘입니다.
+
+\textbf{표기:} 추정된 함수는 $\hat{f}$ (f-hat)으로 표시
+
+\begin{equation}
+\hat{y} = \hat{f}(x)
+\end{equation}
+
+\subsection{추론 vs 예측 (Inference vs Prediction)}
+
+통계 모델링에는 두 가지 주요 목적이 있습니다:
+
+\subsubsection{추론 문제 (Inference Problems)}
+
+\textbf{목표:} $\hat{f}$의 형태와 특성을 이해하는 것
+
+\textbf{특징:}
+\begin{itemize}
+    \item $\hat{f}$를 얻는 것이 주요 목적
+    \item 탐정처럼 관계를 이해하고자 함
+    \item 해석 가능성(interpretability)이 중요
+\end{itemize}
+
+\textbf{모델 유형:}
+\begin{itemize}
+    \item 모수적 모델 (Parametric models)
+    \item 적은 수의 해석 가능한 매개변수
+\end{itemize}
+
+\textbf{예시:}
+\begin{itemize}
+    \item 선형 회귀 (Linear Regression)
+    \item 로지스틱 회귀 (Logistic Regression)
+\end{itemize}
+
+\subsubsection{예측 문제 (Prediction Problems)}
+
+\textbf{목표:} 예측의 정확도를 최대화하는 것
+
+\textbf{특징:}
+\begin{itemize}
+    \item $\hat{f}$의 구체적인 형태는 덜 중요
+    \item 정확도만 높으면 됨
+    \item "돈을 벌기 위한" 목적
+\end{itemize}
+
+\textbf{목적 함수:} 예측값 $\hat{y}$와 관측값 $y$의 차이 최소화
+
+\textbf{모델 유형:}
+\begin{itemize}
+    \item 비모수적/유연한 모델 (Non-parametric/flexible models)
+    \item 정확도에 초점
+\end{itemize}
+
+\textbf{예시:}
+\begin{itemize}
+    \item k-최근접 이웃 (K-Nearest Neighbors)
+    \item 랜덤 포레스트 (Random Forest)
+    \item 신경망 (Neural Networks) - 모수적이지만 고차원이며 주로 예측용
+\end{itemize}
+
+\subsubsection{이번 강의의 선택}
+
+\textbf{k-Nearest Neighbors (kNN)를 선택한 이유:}
+\begin{quote}
+"이해하기 쉽기 때문입니다!"
+\end{quote}
+
+\begin{itemize}
+    \item 예측 문제용
+    \item 비모수적 방법
+    \item 직관적이고 이해하기 쉬움
+    \item 나중에 모수적 방법(선형 회귀 등)도 배울 예정
+\end{itemize}
+
+\section{판매량 예측 예제 (Predicting Sales Example)}
+
+\subsection{문제 설정}
+
+\textbf{목표:} TV 광고 예산을 기반으로 판매량 예측
+
+\begin{itemize}
+    \item \textbf{반응변수 ($y$):} Sales (판매량)
+    \item \textbf{예측변수 ($x$):} TV budget (TV 광고 예산)
+\end{itemize}
+
+\subsection{단순한 접근: 평균 모델}
+
+가장 단순한 모델은 모든 $y$의 평균을 사용하는 것:
+
+\begin{equation}
+\hat{y} = \bar{y} = \frac{1}{n}\sum_{i=1}^{n}y_i
+\end{equation}
+
+\textbf{문제점:}
+\begin{itemize}
+    \item $x$ 값에 관계없이 항상 같은 예측값
+    \item 너무 단순(naive)함
+    \item 하지만 \textbf{기준 모델(baseline model)}로 유용함
+\end{itemize}
+
+\section{k-최근접 이웃 (k-Nearest Neighbors)}
+
+\subsection{의사 방문 비유}
+
+\textbf{kNN의 핵심 아이디어를 일상 예시로 이해:}
+
+\begin{quote}
+의사에게 "배가 아파요"라고 말하면:
+\begin{itemize}
+    \item 의사는 많은 검사를 하지 않고
+    \item "이번 주에 배가 아픈 환자 10명이 있었는데, 다들 특정 음식점에서 먹었더라"
+    \item 이렇게 가장 비슷한 사례들을 참고해서 진단
+\end{itemize}
+\end{quote}
+
+이것이 바로 kNN의 원리입니다: \textbf{비슷한 사례를 찾아서 참고하기!}
+
+\subsection{kNN 알고리즘 (1-Nearest Neighbor)}
+
+\subsubsection{단계별 설명}
+
+어떤 새로운 $x_q$에서 $\hat{y}_q$를 예측하려면:
+
+\textbf{단계 1: 거리 계산}
+\begin{itemize}
+    \item 새로운 점 $x_q$와 모든 훈련 데이터 점 $x_i$ 사이의 거리 계산
+    \item 1차원에서: $D(x_q, x_i) = |x_q - x_i|$
+\end{itemize}
+
+\textbf{단계 2: 최근접 이웃 찾기}
+\begin{itemize}
+    \item 가장 가까운 이웃 $(x_p, y_p)$ 찾기
+    \item 가장 작은 거리를 가진 점
+\end{itemize}
+
+\textbf{단계 3: 예측}
+\begin{itemize}
+    \item 최근접 이웃의 $y$ 값을 예측값으로 사용
+    \item $\hat{y}_q = y_p$
+\end{itemize}
+
+\textbf{단계 4: 모든 점에 대해 반복}
+\begin{itemize}
+    \item 예측하고 싶은 모든 $x'$ 값에 대해 위 과정 반복
+    \item 연속적인 예측 곡선 생성
+\end{itemize}
+
+\subsection{k-최근접 이웃으로 확장}
+
+\subsubsection{왜 k개의 이웃을 사용하나?}
+
+1개 대신 k개의 이웃을 사용하면:
+\begin{itemize}
+    \item 더 안정적인 예측
+    \item 이상치(outliers)의 영향 감소
+    \item 더 부드러운 예측 곡선
+\end{itemize}
+
+\subsubsection{알고리즘 (k-Nearest Neighbors)}
+
+주어진 데이터셋 $D = \{(x^{(1)}, y^{(1)}), \ldots, (x^{(N)}, y^{(N)})\}$에 대해,
+새로운 $X$에서:
+
+\textbf{1. k개의 최근접 이웃 찾기}
+
+$X$와 가장 가까운 $k$개의 관측값 찾기:
+\begin{equation}
+\{(x^{(n_1)}, y^{(n_1)}), \ldots, (x^{(n_k)}, y^{(n_k)})\}
+\end{equation}
+
+이것들을 $x$의 \textbf{k-최근접 이웃(k-nearest neighbors)}이라고 함
+
+\textbf{2. 이웃들의 평균 계산}
+
+k-최근접 이웃들의 출력값 평균:
+\begin{equation}
+\hat{y} = \frac{1}{K}\sum_{k=1}^{K}y^{(n_k)}
+\end{equation}
+
+\subsection{k 값의 영향}
+
+\textbf{서로 다른 k 값의 효과:}
+
+\begin{itemize}
+    \item \textbf{k = 1:}
+    \begin{itemize}
+        \item 가장 가까운 1개만 사용
+        \item 매우 복잡한 곡선
+        \item 훈련 데이터를 정확히 통과
+        \item 잡음(noise)에 민감
+    \end{itemize}
+
+    \item \textbf{k = 3, 10, 15:}
+    \begin{itemize}
+        \item 더 부드러운 곡선
+        \item 잡음에 덜 민감
+        \item 더 안정적인 예측
+    \end{itemize}
+
+    \item \textbf{k = n (모든 데이터):}
+    \begin{itemize}
+        \item 모든 점의 평균과 같음
+        \item 가장 단순한 모델로 회귀
+        \item 수평선
+    \end{itemize}
+\end{itemize}
+
+\subsection{하이퍼파라미터 (Hyperparameter)}
+
+\begin{equation}
+\hat{y} = \frac{1}{K}\sum_{k=1}^{K}y^{(n_k)}
+\end{equation}
+
+여기서 $K$는 \textbf{하이퍼파라미터(hyper-parameter)}입니다.
+
+\textbf{하이퍼파라미터란?}
+\begin{itemize}
+    \item 모델 학습 \textbf{전에} 선택하는 매개변수
+    \item 데이터로부터 학습되지 않음
+    \item 사용자가 직접 설정
+\end{itemize}
+
+\textbf{중요한 구분:}
+\begin{itemize}
+    \item \textbf{비모수적 (Non-parametric)} $\neq$ "하이퍼파라미터가 없다"
+    \item 비모수적 = 데이터로부터 고정된 매개변수를 학습하지 않음
+    \item kNN은 비모수적이지만 하이퍼파라미터 $k$를 가짐
+\end{itemize}
+
+\subsection{kNN의 특징}
+
+\textbf{kNN은 다음과 같은 방법입니다:}
+
+\begin{enumerate}
+    \item \textbf{인간적인 의사결정 방식}
+    \begin{itemize}
+        \item 비슷한 사례를 참고하는 매우 직관적인 방법
+        \item 의사의 진단 방식과 유사
+    \end{itemize}
+
+    \item \textbf{비모수적 학습 알고리즘}
+    \begin{itemize}
+        \item 입력과 출력 간의 고정된 형태를 가정하지 않음
+        \item 오직 데이터에만 의존
+    \end{itemize}
+
+    \item \textbf{게으른 학습 (Lazy Learning)}
+    \begin{itemize}
+        \item 사전에 모델을 학습하지 않음
+        \item 예측할 때마다 전체 데이터를 참조
+    \end{itemize}
+\end{enumerate}
+
+\section{고차원 kNN (High-Dimensional kNN)}
+
+\subsection{다변량 데이터로 확장}
+
+지금까지는 하나의 예측변수 (TV 예산)만 사용했습니다.
+실제로는 여러 예측변수를 동시에 사용합니다.
+
+\textbf{질문:} 예측변수가 2개, 3개, 또는 그 이상일 때 거리를 어떻게 계산할까?
+
+\subsection{유클리드 거리 (Euclidean Distance)}
+
+\subsubsection{2차원에서의 거리}
+
+두 점 $(x_1, y_1)$과 $(x_2, y_2)$ 사이의 거리:
+
+\textbf{피타고라스의 정리:}
+\begin{equation}
+D = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}
+\end{equation}
+
+\subsubsection{p차원에서의 거리}
+
+두 벡터 $\mathbf{x}_i = (x_{i1}, x_{i2}, \ldots, x_{ip})$와
+$\mathbf{x}_q = (x_{q1}, x_{q2}, \ldots, x_{qp})$ 사이의 유클리드 거리:
+
+\begin{equation}
+D(\mathbf{x}_q, \mathbf{x}_i) = \sqrt{\sum_{j=1}^{p}(x_{qj} - x_{ij})^2}
+\end{equation}
+
+\textbf{단계별 계산:}
+\begin{enumerate}
+    \item 각 차원에서 차이 계산: $(x_{qj} - x_{ij})$
+    \item 차이를 제곱: $(x_{qj} - x_{ij})^2$
+    \item 모든 차원에 대해 합산: $\sum_{j=1}^{p}$
+    \item 제곱근: $\sqrt{\cdot}$
+\end{enumerate}
+
+\subsection{차원의 저주 (Curse of Dimensionality)}
+
+\textbf{경고:} 차원이 증가하면 여러 문제가 발생합니다!
+
+\subsubsection{문제점들}
+
+\textbf{1. 데이터 희소성 (Data Sparsity)}
+\begin{itemize}
+    \item 차원이 증가할수록 공간의 부피가 기하급수적으로 증가
+    \item 같은 양의 데이터가 넓은 공간에 흩어짐
+    \item 이웃들이 실제로는 멀리 떨어져 있을 수 있음
+\end{itemize}
+
+\textbf{비유:}
+\begin{quote}
+1차원(선)에서는 모두 밀집해 있지만,
+2차원(평면)으로 가면 빈 공간이 생기고,
+3차원(공간)으로 가면 대부분이 빈 공간입니다!
+\end{quote}
+
+\textbf{2. 거리의 의미 상실}
+\begin{itemize}
+    \item 고차원에서는 모든 점들이 서로 비슷한 거리에 위치
+    \item "가까운" 이웃과 "먼" 이웃의 구분이 모호해짐
+    \item kNN의 기본 가정이 무너짐
+\end{itemize}
+
+\subsubsection{해결책}
+
+\textbf{1. 충분한 데이터 확보}
+\begin{itemize}
+    \item 차원이 높을수록 더 많은 데이터 필요
+    \item 경험적 규칙: 각 차원당 최소 5-10배의 관측값
+\end{itemize}
+
+\textbf{2. 특징 스케일링 (Feature Scaling)}
+\begin{itemize}
+    \item 모든 특징을 같은 스케일로 조정
+    \item 한 변수가 거리 계산을 지배하지 않도록 함
+    \item 방법: 표준화(standardization), 정규화(normalization)
+\end{itemize}
+
+\textbf{3. 특징 선택 (Feature Selection)}
+\begin{itemize}
+    \item 중요한 특징만 선택
+    \item 불필요한 차원 제거
+    \item 차원 축소 기법 사용 (PCA 등)
+\end{itemize}
+
+\subsection{특징 스케일링의 중요성}
+
+\textbf{예시:}
+
+TV 예산과 신문 예산을 사용한다고 가정:
+\begin{itemize}
+    \item TV 예산: \$1,000 단위 (0 - 300 범위)
+    \item 신문 예산: \$1 단위 (0 - 30000 범위)
+\end{itemize}
+
+\textbf{문제:}
+\begin{itemize}
+    \item 신문 예산의 숫자가 훨씬 큼
+    \item 거리 계산에서 신문 예산이 지배적
+    \item TV 예산의 정보가 무시됨
+\end{itemize}
+
+\textbf{해결:}
+\begin{itemize}
+    \item 모든 변수를 같은 스케일로 조정
+    \item 예: 평균 0, 표준편차 1로 표준화
+\end{itemize}
+
+\section{kNN 구현 고려사항}
+
+\subsection{알고리즘 복잡도}
+
+\textbf{시간 복잡도:}
+\begin{itemize}
+    \item 학습: $O(1)$ - 사실상 학습 없음
+    \item 예측: $O(n \cdot p)$ - 모든 점과의 거리 계산 필요
+    \begin{itemize}
+        \item $n$: 훈련 데이터 개수
+        \item $p$: 특징 개수
+    \end{itemize}
+\end{itemize}
+
+\textbf{공간 복잡도:}
+\begin{itemize}
+    \item $O(n \cdot p)$ - 모든 훈련 데이터 저장 필요
+\end{itemize}
+
+\subsection{Python 구현 팁}
+
+\begin{lstlisting}[language=Python]
+from sklearn.neighbors import KNeighborsRegressor
+
+# 모델 생성
+knn = KNeighborsRegressor(n_neighbors=k)
+
+# 학습 (사실상 데이터만 저장)
+knn.fit(X_train, y_train)
+
+# 예측
+y_pred = knn.predict(X_test)
+\end{lstlisting}
+
+\textbf{주의사항:}
+\begin{itemize}
+    \item 데이터 스케일링 필수!
+    \item $k$ 값은 교차검증으로 선택
+    \item 대용량 데이터에는 부적합
+\end{itemize}
+
+\section{학습 목표 정리 (Learning Objectives)}
+
+이번 강의를 통해 다음을 배웠습니다:
+
+\subsection{Part A: 통계적 모델링과 kNN}
+
+\begin{enumerate}
+    \item \textbf{반응변수와 예측변수 정의}
+    \begin{itemize}
+        \item 설계 행렬(Design Matrix)과 반응 벡터로 표현
+        \item 수학적 표기법 이해
+    \end{itemize}
+
+    \item \textbf{추론과 예측의 차이 설명}
+    \begin{itemize}
+        \item 추론: 관계 이해가 목적
+        \item 예측: 정확도가 목적
+    \end{itemize}
+
+    \item \textbf{k-최근접 이웃 알고리즘 이해}
+    \begin{itemize}
+        \item 비모수적 방법
+        \item 데이터에만 의존
+        \item 하이퍼파라미터 $k$ 존재
+    \end{itemize}
+
+    \item \textbf{1차원 kNN 구현}
+    \begin{itemize}
+        \item 최근접 이웃 찾기
+        \item 거리로 이웃 결정
+        \item 이웃의 값 평균내어 예측
+    \end{itemize}
+
+    \item \textbf{다차원으로 확장}
+    \begin{itemize}
+        \item 유클리드 거리 사용
+        \item $p$차원 거리 계산
+    \end{itemize}
+
+    \item \textbf{스케일링과 특징 선택의 중요성 인식}
+    \begin{itemize}
+        \item 차원의 저주 이해
+        \item 특징 스케일링 필요성
+        \item 특징 선택의 중요성
+    \end{itemize}
+\end{enumerate}
+
+\section{다음 단계}
+
+\textbf{다음 강의에서 배울 내용:}
+
+\begin{itemize}
+    \item \textbf{Part B: Model Fitness}
+    \begin{itemize}
+        \item 모델 성능 평가 방법
+        \item Train/Validation/Test 분할
+        \item MSE, RMSE, R-squared
+        \item 모델 비교 방법
+        \item 하이퍼파라미터 선택
+    \end{itemize}
+
+    \item \textbf{선형 회귀 (Linear Regression)}
+    \begin{itemize}
+        \item 모수적 방법
+        \item 추론 문제
+        \item 해석 가능성
+    \end{itemize}
+\end{itemize}
+
+\section{핵심 요약}
+
+\subsection{kNN의 장점}
+
+\begin{itemize}
+    \item ✓ 이해하기 쉬움
+    \item ✓ 구현이 간단
+    \item ✓ 가정이 필요 없음
+    \item ✓ 비선형 관계도 포착 가능
+\end{itemize}
+
+\subsection{kNN의 단점}
+
+\begin{itemize}
+    \item ✗ 예측 속도가 느림
+    \item ✗ 메모리 사용량이 큼
+    \item ✗ 고차원에서 성능 저하
+    \item ✗ 특징 스케일링 필수
+    \item ✗ 해석이 어려움
+\end{itemize}
+
+\subsection{기억해야 할 핵심 공식}
+
+\textbf{kNN 예측:}
+\begin{equation}
+\hat{y} = \frac{1}{K}\sum_{k=1}^{K}y^{(n_k)}
+\end{equation}
+
+\textbf{유클리드 거리:}
+\begin{equation}
+D(\mathbf{x}_q, \mathbf{x}_i) = \sqrt{\sum_{j=1}^{p}(x_{qj} - x_{ij})^2}
+\end{equation}
+
+\end{document}

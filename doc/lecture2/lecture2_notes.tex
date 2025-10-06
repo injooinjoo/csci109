@@ -1,0 +1,1018 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf-8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CS109A Lecture 2}
+\lhead{Data and Visualization}
+\rfoot{Page \thepage}
+
+\title{\textbf{CS109A Introduction to Data Science\\Lecture 2: Data and Visualization}}
+\author{Pavlos Protopapas, Kevin Rader, and Chris Gumb}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{강의 개요 (Lecture Outline)}
+
+이번 강의에서는 데이터 과학의 핵심 프로세스 중 데이터 수집과 탐색 단계를 다룹니다.
+
+\begin{itemize}
+    \item 데이터란 무엇인가? (What are Data?)
+    \item 탐색적 데이터 분석 (Exploratory Data Analysis - EDA)
+    \begin{itemize}
+        \item 기술 통계량 (Descriptive Statistics)
+        \item 기본 시각화 (Basic Visualizations)
+    \end{itemize}
+    \item 역사적 고찰 (Historical Interlude)
+    \item 효과적인 시각화 (Effective Visualizations)
+\end{itemize}
+
+\textbf{추천 읽기 자료:} \textit{An Introduction to Statistical Learning} (ISL) Chapter 1
+
+\section{데이터 과학 프로세스 (The Data Science Process)}
+
+데이터 과학 프로세스는 다음 5단계로 구성됩니다:
+
+\begin{enumerate}
+    \item \textbf{흥미로운 질문 제기} (Ask an interesting question)
+    \item \textbf{데이터 수집} (Get the Data)
+    \item \textbf{데이터 탐색} (Explore the Data)
+    \item \textbf{데이터 모델링} (Model the Data)
+    \item \textbf{결과 소통/시각화} (Communicate/Visualize the Results)
+\end{enumerate}
+
+오늘 강의에서는 \textbf{2단계(데이터 수집)}와 \textbf{3단계(데이터 탐색)}를 집중적으로 다룹니다.
+
+\section{데이터란 무엇인가? (What are Data?)}
+
+\subsection{데이터의 정의}
+
+\begin{quote}
+\textit{``A datum is a single measurement of something on a scale that is understandable to both the recorder and the reader. Data are multiple such measurements.''}
+\end{quote}
+
+\textbf{주장:} 모든 것은 데이터가 될 수 있습니다! (Everything is/can be data!)
+
+예시:
+\begin{itemize}
+    \item 소셜 미디어 데이터 (Facebook, Twitter)
+    \item 리뷰 데이터 (Yelp)
+    \item 웨어러블 디바이스 데이터 (Google Glass 등)
+\end{itemize}
+
+\subsection{데이터의 출처 (Where do data come from?)}
+
+데이터는 다음 세 가지 주요 출처에서 얻을 수 있습니다:
+
+\subsubsection{1. 내부 소스 (Internal Sources)}
+\begin{itemize}
+    \item 조직에서 이미 수집했거나 보유하고 있는 데이터
+    \item 예시: 일상 운영을 기록하는 비즈니스 데이터베이스, 과학 실험 데이터
+\end{itemize}
+
+\subsubsection{2. 기존 외부 소스 (Existing External Sources)}
+\begin{itemize}
+    \item 외부에서 무료 또는 유료로 바로 읽을 수 있는 형식으로 제공되는 데이터
+    \item 예시: 정부 공공 데이터베이스, 주식 시장 데이터, Yelp 리뷰, 스포츠 통계, Kaggle
+\end{itemize}
+
+\subsubsection{3. 수집 노력이 필요한 외부 소스 (External Sources Requiring Collection Efforts)}
+\begin{itemize}
+    \item 외부에서 얻을 수 있지만 특별한 처리가 필요한 데이터
+    \item 예시: 인쇄물로만 존재하는 데이터, 웹사이트의 데이터
+\end{itemize}
+
+\subsection{온라인 데이터 수집 방법 (Ways to Gather Online Data)}
+
+온라인에서 생성, 게시 또는 호스팅되는 데이터를 얻는 방법:
+
+\subsubsection{1. API (Application Programming Interface)}
+\begin{itemize}
+    \item 회사가 자사 서비스에 접근하기 위해 개발한 미리 만들어진 함수 세트
+    \item 종종 유료로 사용
+    \item 예시: Google Map API, Facebook/Meta API, Twitter/X API
+\end{itemize}
+
+\subsubsection{2. RSS (Rich Site Summary)}
+\begin{itemize}
+    \item 자주 업데이트되는 온라인 콘텐츠를 표준 형식으로 요약
+    \item 사이트에서 제공하면 무료로 읽기 가능
+    \item 예시: 뉴스 관련 사이트, 블로그
+\end{itemize}
+
+\subsubsection{3. 웹 스크래핑 (Web Scraping)}
+\begin{itemize}
+    \item 소프트웨어, 스크립트 또는 수동으로 페이지에 표시되거나 HTML 파일에 포함된 데이터 추출
+    \item HTML 테이블에서 데이터를 추출하는 경우가 많음
+    \item 다음 주 수요일 강의와 HW1에서 beautifulsoup 사용법을 다룸
+\end{itemize}
+
+\subsection{웹 스크래핑 고려사항}
+
+\textbf{왜 하는가?}
+\begin{itemize}
+    \item 오래된 정부 사이트나 작은 뉴스 사이트에는 API가 없을 수 있음
+    \item RSS 피드나 다운로드 가능한 데이터베이스가 없을 수 있음
+    \item API나 데이터베이스 사용료를 지불하고 싶지 않을 수 있음
+\end{itemize}
+
+\textbf{해야 하는가?}
+
+\underline{탐색용:}
+\begin{itemize}
+    \item 서비스 약관을 위반하는가?
+    \item 웹사이트와 고객의 프라이버시 문제는?
+\end{itemize}
+
+\underline{분석 결과나 제품 게시용:}
+\begin{itemize}
+    \item 우회하려는 API나 요금이 있는가?
+    \item 데이터를 공유할 의향이 있는가?
+    \item 서비스 약관을 위반하는가?
+    \item 프라이버시 문제는?
+\end{itemize}
+
+\section{데이터 유형 (Types of Data)}
+
+\subsection{데이터 값의 종류 (Data Types)}
+
+데이터는 어떤 종류의 값을 포함하는가?
+
+\subsubsection{단순형 또는 원자형 (Simple or Atomic)}
+\begin{itemize}
+    \item \textbf{숫자형 (Numeric):} 정수(integers), 실수(floats)
+    \item \textbf{불린형 (Boolean):} 이진 또는 참/거짓 값
+    \item \textbf{문자열 (Strings):} 기호의 시퀀스
+\end{itemize}
+
+\subsubsection{복합형 (Compound)}
+원자형들로 구성됨:
+
+\begin{itemize}
+    \item \textbf{날짜와 시간 (Date and time):} 특정 구조를 가진 복합 값
+    \item \textbf{리스트 (Lists):} 값들의 시퀀스
+    \item \textbf{딕셔너리 (Dictionaries):} 키-값 쌍의 모음
+    \begin{itemize}
+        \item 키 $x$: 항목의 ``이름''을 나타내는 문자열
+        \item 값 $y$: 모든 유형의 값
+    \end{itemize}
+\end{itemize}
+
+\textbf{예시: 학생 레코드}
+\begin{verbatim}
+First: Kevin
+Last: Rader
+Classes: [CS-109A, STAT104]
+\end{verbatim}
+
+\subsection{데이터 저장 방식 (Data Storage)}
+
+데이터는 어떻게 표현되고 저장되는가?
+
+\subsubsection{1. 표 형식 데이터 (Tabular Data)}
+\begin{itemize}
+    \item 2차원 테이블 형태의 데이터셋
+    \item 각 행: 단일 데이터 레코드
+    \item 각 열: 한 가지 유형의 측정
+    \item 형식: csv, dat, xlsx 등
+\end{itemize}
+
+\subsubsection{2. 구조화된 데이터 (Structured Data)}
+\begin{itemize}
+    \item 각 데이터 레코드가 딕셔너리 형태로 표현됨
+    \item 복잡하고 다층적일 수 있음
+    \item 형식: json, xml 등
+\end{itemize}
+
+\subsubsection{3. 반구조화된 데이터 (Semistructured Data)}
+\begin{itemize}
+    \item 모든 레코드가 동일한 키 세트로 표현되지 않음
+    \item 일부 데이터 레코드가 키-값 쌍 구조를 사용하지 않음
+\end{itemize}
+
+\subsection{표 형식 데이터의 용어}
+
+\begin{itemize}
+    \item \textbf{변수(Variable) 또는 속성(Attribute):} 각 측정 유형 (예: seq\_id, status, duration)
+    \item \textbf{차원(Dimension):} 속성의 개수
+    \item \textbf{특��(Features):} 속성을 가리키는 다른 용어
+    \item \textbf{레코드(Records) 또는 관측값(Observations):} 각 행이 나타내는 개별 데이터
+\end{itemize}
+
+각 테이블은 동일한 종류의 객체나 이벤트의 레코드를 포함해야 합니다.
+
+\subsection{변수의 유형 (Types of Variables)}
+
+값의 유형에 따라 변수를 구분하는 것이 중요합니다:
+
+\subsubsection{정량적 변수 (Quantitative Variable)}
+숫자형이며 다음 중 하나:
+\begin{itemize}
+    \item \textbf{이산형 (Discrete):} 제한된 구간에서 유한한 개수의 값만 가능
+    \begin{itemize}
+        \item 예: ``형제자매 수''
+    \end{itemize}
+    \item \textbf{연속형 (Continuous):} 제한된 구간에서 무한한 개수의 값이 가능
+    \begin{itemize}
+        \item 예: ``키''
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{범주형 변수 (Categorical Variable)}
+\begin{itemize}
+    \item 값들 사이에 본질적인 순서가 없음
+    \item 예: ``어떤 종류의 애완동물을 키우나요?''
+\end{itemize}
+
+\section{데이터의 일반적인 문제점 (Common Issues with Data)}
+
+\begin{enumerate}
+    \item \textbf{결측값 (Missing values):} 어떻게 채울 것인가?
+    \item \textbf{잘못된 값 (Wrong values):} 어떻게 감지하고 수정할 것인가?
+    \item \textbf{지저분한 형식 (Messy format):} 데이터 정리 필요
+    \item \textbf{사용 불가능 (Not usable):} 데이터가 제기된 질문에 답할 수 없음
+\end{enumerate}
+
+\subsection{지저분한 데이터 예시}
+
+\textbf{문제가 되는 일반적인 원인:}
+\begin{itemize}
+    \item 열 헤더가 변수명이 아니라 값임
+    \item 변수가 행과 열 모두에 저장됨
+    \item 여러 변수가 하나의 열/항목에 저장됨
+    \item 여러 유형의 실험 단위가 같은 테이블에 저장됨
+\end{itemize}
+
+\textbf{표 형식화 원칙:}
+\begin{itemize}
+    \item 각 파일 = 하나의 데이터셋
+    \item 각 열 = 단일 변수
+    \item 각 행 = 단일 관측값
+\end{itemize}
+
+이렇게 하면 Python(과 Pavlos)이 행복해집니다!
+
+\section{Pandas 라이브러리 소개}
+
+\subsection{Pandas의 핵심 개념}
+
+Pandas는 Python 표준 라이브러리에 없는 추가 데이터 유형을 제공합니다.
+
+\subsubsection{Series (시리즈)}
+
+Series는 1차원 배열과 유사하지만 더 강력합니다:
+
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# 리스트로 Series 만들기
+s = pd.Series([1, 2, 3, 4])
+\end{lstlisting}
+
+\textbf{Series의 구성 요소:}
+\begin{itemize}
+    \item \texttt{values}: NumPy 배열로 저장된 실제 값들
+    \item \texttt{index}: 각 값의 레이블 (기본값: 0, 1, 2, ...)
+    \item \texttt{name}: Series의 이름 (DataFrame에서 열 이름이 됨)
+    \item \texttt{dtype}: 데이터 타입
+\end{itemize}
+
+\textbf{중요한 차이점:}
+\begin{itemize}
+    \item Series의 index는 숫자가 아니어도 됨
+    \item Index는 레이블로 생각해야 함 (위치가 아님)
+    \item Index가 중복될 수 있음
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+# 사용자 정의 인덱스
+s.index = ['a', 'b', 'c', 'd']
+print(s['a'])  # 첫 번째 값 반환
+\end{lstlisting}
+
+\subsubsection{DataFrame (데이터프레임)}
+
+DataFrame은 여러 Series로 구성된 2차원 테이블입니다.
+
+\textbf{DataFrame 생성 방법:}
+
+1. 딕셔너리의 리스트로 (행별로):
+\begin{lstlisting}[language=Python]
+df = pd.DataFrame([
+    {'col1': 1, 'col2': 'a'},
+    {'col1': 2, 'col2': 'b'}
+])
+\end{lstlisting}
+
+2. 리스트의 딕셔너리로 (열별로):
+\begin{lstlisting}[language=Python]
+df = pd.DataFrame({
+    'col1': [1, 2],
+    'col2': ['a', 'b']
+})
+\end{lstlisting}
+
+\subsection{NumPy 배열의 특성}
+
+\textbf{왜 NumPy는 같은 타입을 원하는가?}
+
+\begin{itemize}
+    \item 모든 요소가 고정된 크기라면, 메모리에서 정확한 위치를 산술적으로 계산 가능
+    \item 배열의 모든 데이터가 메모리에 연속적으로 저장됨
+    \item 빠른 접근과 연산이 가능
+\end{itemize}
+
+\textbf{dtype='object'의 의미:}
+\begin{itemize}
+    \item 문자열이나 다양한 객체가 있을 때 사용
+    \item 실제 데이터가 아닌 메모리 주소를 저장
+    \item 성능이 느려질 수 있음 (메모리를 건너뛰며 접근해야 함)
+\end{itemize}
+
+\subsection{DataFrame 검사 메서드}
+
+\begin{lstlisting}[language=Python]
+# CSV 파일 읽기
+df = pd.read_csv('data.csv')
+
+# 처음 n개 행 보기
+df.head(n)  # 기본값: n=5
+
+# 마지막 n개 행 보기
+df.tail(n)
+
+# 열 이름 확인
+df.columns
+
+# 행과 열의 개수
+df.shape  # (rows, columns)
+
+# 기술 통계량 (숫자형 열만)
+df.describe()
+
+# 데이터프레임 정보
+df.info()
+
+# 데이터 타입만 확인
+df.dtypes
+\end{lstlisting}
+
+\subsection{DataFrame 조작}
+
+\subsubsection{열 이름 변경}
+
+\begin{lstlisting}[language=Python]
+# 열 이름을 깔끔하게 변경
+new_columns = ['col1', 'col2', 'col3']
+df.columns = new_columns
+\end{lstlisting}
+
+\textbf{명명 규칙:}
+\begin{itemize}
+    \item 모두 소문자 사용
+    \item 공백 대신 밑줄(\_) 사용
+    \item 타이핑하기 쉽게 만들기
+\end{itemize}
+
+\subsubsection{열 선택}
+
+\begin{lstlisting}[language=Python]
+# 단일 열 (Series 반환)
+df['column_name']
+df.column_name  # 더 빠르지만 조심해서 사용
+
+# 여러 열 (DataFrame 반환)
+df[['col1', 'col2']]
+\end{lstlisting}
+
+\subsubsection{불린 인덱싱}
+
+\begin{lstlisting}[language=Python]
+# 조건에 맞는 행 선택
+mask = df['column'] > 5
+df[mask]
+
+# 한 번에:
+df[df['column'] > 5]
+
+# NaN 처리
+mask.fillna(False)
+\end{lstlisting}
+
+\subsubsection{인덱스 재설정}
+
+\begin{lstlisting}[language=Python]
+# 인덱스 재설정 (기존 인덱스를 열로 유지)
+df.reset_index()
+
+# 기존 인덱스 버리기
+df.reset_index(drop=True)
+\end{lstlisting}
+
+\textbf{중요:} 정렬이나 부분집합 추출 후에는 항상 인덱스를 재설정하세요!
+
+\subsubsection{loc vs iloc}
+
+\begin{itemize}
+    \item \texttt{loc}: 레이블 기반 인덱싱
+    \item \texttt{iloc}: 정수 위치 기반 인덱싱
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+# loc: 레이블 사용
+df.loc[3]  # 인덱스 레이블이 3인 행
+
+# iloc: 위치 사용
+df.iloc[3]  # 4번째 행 (0부터 시작)
+\end{lstlisting}
+
+\subsection{일반적인 DataFrame 연산}
+
+\subsubsection{고유값과 개수}
+
+\begin{lstlisting}[language=Python]
+# 고유값 찾기
+df['column'].unique()
+
+# 고유값 개수
+len(df['column'].unique())
+
+# 각 값의 개수 세기
+df['column'].value_counts()
+\end{lstlisting}
+
+\subsubsection{정렬}
+
+\begin{lstlisting}[language=Python]
+# 값으로 정렬
+df.sort_values('column_name')
+
+# 내림차순
+df.sort_values('column_name', ascending=False)
+\end{lstlisting}
+
+\subsubsection{그룹화와 집계}
+
+\begin{lstlisting}[language=Python]
+# 그룹화
+df.groupby('column')
+
+# 집계 함수 적용
+df.groupby('program').agg({'panda_skill': 'mean'})
+
+# 정렬까지
+df.groupby('program').agg({'panda_skill': 'mean'}) \
+  .sort_values('panda_skill')
+\end{lstlisting}
+
+\subsubsection{문자열 연산}
+
+\begin{lstlisting}[language=Python]
+# 문자열 분할
+df['languages'].str.split(', ')
+
+# explode: 리스트의 각 요소를 별도 행으로
+df['languages'].str.split(', ').explode()
+
+# 문자열 포함 여부
+df['fave_movie'].str.contains('bat')
+\end{lstlisting}
+
+\subsection{시각화}
+
+\begin{lstlisting}[language=Python]
+# 간단한 막대 그래프
+df['column'].value_counts().plot(kind='bar')
+\end{lstlisting}
+
+Pandas는 matplotlib 기반의 간단한 시각화 기능을 제공합니다.
+
+\section{샘플링 기초 (Basics of Sampling)}
+
+\subsection{모집단 vs 표본}
+
+\begin{itemize}
+    \item \textbf{모집단 (Population):} 연구 대상이 되는 전체 객체나 이벤트 집합
+    \begin{itemize}
+        \item 가설적일 수 있음 (``모든 학생'')
+        \item 구체적일 수 있음 (``이 수업의 모든 학생'')
+    \end{itemize}
+    \item \textbf{표본 (Sample):} 연구 대상의 ``대표적인'' 부분집합
+    \begin{itemize}
+        \item 모집단 데이터를 얻거나 계산하는 것이 불가능하거나 어려울 때 필요
+    \end{itemize}
+\end{itemize}
+
+\subsection{표본의 편향 (Biases in Samples)}
+
+\begin{itemize}
+    \item \textbf{선택 편향 (Selection bias):} 일부 대상이나 레코드가 선택될 가능성이 더 높음
+    \item \textbf{자원자/무응답 편향 (Volunteer/Nonresponse bias):} 쉽게 접근할 수 없는 대상이나 레코드가 표현되지 않음
+\end{itemize}
+
+\section{기술 통계량 (Descriptive Statistics)}
+
+\subsection{표본 평균 (Sample Mean)}
+
+$n$개 관측값의 평균은 $\bar{x}$로 표시하며 다음과 같이 정의됩니다:
+
+\begin{equation}
+\bar{x} = \frac{x_1 + x_2 + \cdots + x_n}{n} = \frac{1}{n}\sum_{i=1}^{n}x_i
+\end{equation}
+
+\begin{itemize}
+    \item 평균은 ``전형적인'' 표본 값이 어떻게 생겼는지 설명
+    \item 데이터 분포의 ``중심''을 나타냄
+\end{itemize}
+
+\textbf{핵심 주제:} 표본 평균으로 모집단 평균을 추정할 때는 항상 불확실성이 수반됩니다.
+
+\subsection{표본 중앙값 (Sample Median)}
+
+정렬된 $n$개 관측값의 중앙값은 다음과 같이 정의됩니다:
+
+\begin{equation}
+\text{Median} = \begin{cases}
+x_{(n+1)/2} & \text{if } n \text{ is odd} \\
+\frac{x_{n/2} + x_{(n+1)/2}}{2} & \text{if } n \text{ is even}
+\end{cases}
+\end{equation}
+
+\textbf{예시:} Ages: 17, 19, 21, 22, 23, 23, 23, 38
+
+Median = $(22 + 23)/2 = 22.5$
+
+중앙값도 전형적인 관측값이나 분포의 중심을 설명합니다.
+
+\subsection{평균 vs 중앙값}
+
+\textbf{평균은 극단값(이상치)에 민감합니다:}
+
+\begin{itemize}
+    \item 평균 $>$ 중앙값: \textbf{우측 편향 (Right-skewed)} 분포
+    \item 평균 $<$ 중앙값: \textbf{좌측 편향 (Left-skewed)} 분포
+    \item 평균 $\approx$ 중앙값: 대칭 분포
+\end{itemize}
+
+\textbf{편향은 종종 ``긴 꼬리를 따라갑니다'' (Skewness often ``follows the longer tail'')}
+
+\subsection{계산 복잡도 (Computational Time)}
+
+알고리즘 복잡도 측면에서:
+
+\begin{itemize}
+    \item \textbf{평균:} 최대 $O(n)$
+    \item \textbf{중앙값:} 최대 $O(n \log n)$ [정렬 필요] 또는 가능하면 $O(n)$
+\end{itemize}
+
+\textbf{주의:} 실제 구현의 실용성도 고려해야 합니다!
+
+\subsection{범주형 변수의 경우}
+
+범주형 변수에는 평균이나 중앙값이 의미가 없습니다. 왜일까요?
+
+\textbf{최빈값 (Mode)}이 가장 ``대표적인'' 값을 찾는 더 나은 방법일 수 있습니다.
+
+\subsection{산포도 측정: 범위 (Measures of Spread: Range)}
+
+관측값 표본의 산포도는 평균이나 중앙값이 표본을 얼마나 잘 설명하는지 측정합니다.
+
+\begin{equation}
+\text{Range} = \text{Maximum Value} - \text{Minimum Value}
+\end{equation}
+
+\subsection{산포도 측정: 분산 (Measures of Spread: Variance)}
+
+표본 분산 $s^2$는 표본 값들이 평균에서 평균적으로 얼마나 벗어나는지 측정합니다:
+
+\begin{equation}
+s^2 = \frac{1}{n-1}\sum_{i=1}^{n}|x_i - \bar{x}|^2
+\end{equation}
+
+\textbf{주의사항:}
+\begin{itemize}
+    \item $|x_i - \bar{x}|$: 각 $x_i$가 평균 $\bar{x}$에서 벗어난 정도
+    \item 편차를 제곱하므로 $s^2$는 극단값(이상치)에 민감함
+    \item $s^2$는 $x_i$와 같은 단위가 아님!
+\end{itemize}
+
+분산이 1,008이나 0.0001이라는 것이 무엇을 의미할까요?
+
+\subsection{산포도 측정: 표준편차 (Measures of Spread: Standard Deviation)}
+
+표본 표준편차 $s$는 분산의 제곱근입니다:
+
+\begin{equation}
+s = \sqrt{s^2} = \sqrt{\frac{1}{n-1}\sum_{i=1}^{n}|x_i - \bar{x}|^2}
+\end{equation}
+
+\textbf{장점:}
+\begin{itemize}
+    \item $s$는 $x_i$와 같은 단위를 가짐!
+    \item 표준편차는 평균 주변 관측값의 ``평균'' 산포도를 나타냄
+\end{itemize}
+
+\section{시각화 (Visualizations)}
+
+\subsection{시각화의 중요성}
+
+\textbf{Anscombe's Quartet}는 같은 기술 통계량을 가진 네 개의 데이터셋이 실제로는 매우 다를 수 있음을 보여줍니다:
+
+\begin{itemize}
+    \item 모든 데이터셋이 동일한 평균, 표준편차, 상관계수를 가짐
+    \item 그러나 시각화하면 완전히 다른 패턴을 보임!
+\end{itemize}
+
+\textbf{교훈:} \textit{``그림은 천 마디 말의 가치가 있다''}
+
+\subsection{시각화의 목적}
+
+시각화는 데이터를 분석하고 탐색하는 데 도움을 줍니다:
+
+\begin{itemize}
+    \item 숨겨진 패턴과 추세 식별
+    \item 가설 수립/검정
+    \item 모델링 결과 소통
+    \begin{itemize}
+        \item 정보와 아이디어를 간결하게 제시
+        \item 증거와 지원 제공
+        \item 영향을 주고 설득
+    \end{itemize}
+    \item 분석/모델링의 다음 단계 결정
+\end{itemize}
+
+\subsection{시각화 유형 (Types of Visualizations)}
+
+데이터에 대해 무엇을 보여주고 싶은가?
+
+\begin{itemize}
+    \item \textbf{분포 (Distribution):} 데이터셋의 변수가 가능한 값 범위에 걸쳐 어떻게 분포하는지
+    \item \textbf{관계 (Relationship):} 데이터셋의 여러 변수 값들이 어떻게 관련되는지
+    \item \textbf{구성 (Composition):} 데이터셋이 하위 그룹으로 어떻게 나뉘는지
+    \item \textbf{비교 (Comparison):} 여러 변수나 데이터셋의 추세가 어떻게 비교되는지
+\end{itemize}
+
+\subsection{기본 시각화 도구}
+
+\subsubsection{히스토그램 (Histograms)}
+
+1차원 데이터가 특정 값에 걸쳐 어떻게 분포하는지 시각화하는 방법
+
+\textbf{주의:} 히스토그램의 추세는 bin의 개수에 민감합니다!
+
+\subsubsection{막대 그래프 (Bar Plots)}
+
+범주형 변수의 구성(분포)을 시각화하는 방법
+
+\subsubsection{파이 차트 vs 막대 그래프}
+
+파이 차트는 종종 비판받습니다. 왜일까요?
+
+\begin{itemize}
+    \item 각도와 면적을 비교하기 어려움
+    \item 막대의 길이가 더 비교하기 쉬움
+    \item ``Pies vs. Bars'' 밈 참조
+\end{itemize}
+
+\subsubsection{산점도 (Scatter Plots)}
+
+다차원 데이터의 두 속성 간 관계를 시각화하는 방법
+
+\subsubsection{누적 영역 그래프 (Stacked Area Graphs)}
+
+시간(또는 다른 정량적 변수)에 따라 변하는 그룹의 구성을 시각화
+
+범주형 변수와 정량적 변수 간의 관계를 보여줌
+
+\subsubsection{여러 히스토그램 (Multiple Histograms)}
+
+같은 축에 여러 히스토그램(및 커널 밀도 추정)을 그려서 그룹 간 변수를 비교
+
+\subsubsection{상자 그림 (Boxplots)}
+
+그룹 간 정량적 변수를 비교하는 단순화된 시각화
+
+다음을 강조:
+\begin{itemize}
+    \item 범위
+    \item 사분위수
+    \item 중앙값
+    \item 이상치
+\end{itemize}
+
+\subsection{3개 이상의 변수 시각화}
+
+\begin{itemize}
+    \item 1개 변수의 분포 또는 2개 변수 간 관계를 시각화하는 것은 비교적 간단
+    \item 하지만 3, 4개 이상의 변수가 어떻게 관련되는지는?
+    \item 관련된 변수의 유형(범주형 또는 숫자형)에 따라 다름
+\end{itemize}
+
+\textbf{Gapminder 예시:}
+\begin{itemize}
+    \item x축: 소득
+    \item y축: 기대수명
+    \item 색상: 대륙
+    \item 크기: 인구
+    \item 시간: 애니메이션
+\end{itemize}
+
+\subsection{모든 차원이 더 나은 것은 아님}
+
+고��원 데이터에서는 모든 속성의 산점도가 불가능하거나 도움이 되지 않을 수 있습니다.
+
+\section{역사적 시각화 (Historical Interlude)}
+
+\subsection{John Snow의 콜레라 발병 지도 (1854)}
+
+\begin{itemize}
+    \item 런던 Soho 지역의 콜레라 발병 사망자를 지도에 표시
+    \item 사망자가 특정 물 펌프 주변에 집중되어 있음을 발견
+    \item 수인성 질병 전파 이론의 증거
+\end{itemize}
+
+\subsection{Florence Nightingale의 Rose Chart (1858)}
+
+\begin{itemize}
+    \item 크림 전쟁 중 군대의 사망 원인을 시각화
+    \item 예방 가능한 질병으로 인한 사망이 전투 부상보다 훨씬 많음을 보여줌
+    \item 병원 개혁을 이끌어냄
+\end{itemize}
+
+\subsection{Minard의 나폴레옹 러시아 원정 시각화 (1869)}
+
+\begin{itemize}
+    \item 6개의 변수를 하나의 차트에 표시:
+    \begin{itemize}
+        \item 군대의 위치 (2차원)
+        \item 군대의 이동 방향
+        \item 군대의 규모 (선의 두께)
+        \item 온도
+        \item 날짜
+    \end{itemize}
+    \item 역사상 가장 위대한 통계 그래프 중 하나로 평가받음
+\end{itemize}
+
+\section{효과적인 시각화 (Effective Visualizations)}
+
+\subsection{효과적인 시각화를 위한 지침}
+
+\begin{enumerate}
+    \item \textbf{그래픽 무결성 유지} (Have graphical integrity)
+    \item \textbf{단순하게 유지} (Keep it simple)
+    \item \textbf{올바른 표시 방법 사용} (Use the right display)
+    \item \textbf{전략적으로 색상 사용} (Use color strategically)
+    \item \textbf{청중 파악} (Know your audience)
+\end{enumerate}
+
+\subsection{1. 그래픽 무결성 (Graphical Integrity)}
+
+\textbf{나쁜 예:} 2020년 선거 결과 지도
+\begin{itemize}
+    \item 면적별 색칠 지도는 오해를 불러일으킬 수 있음
+    \item 인구 밀도를 고려하지 않음
+    \item 해결책: 점 밀도 지도나 카토그램 사용
+\end{itemize}
+
+\subsection{2. 단순하게 유지 (Keep it Simple)}
+
+\textbf{차트 쓰레기(Chart Junk) 피하기:}
+\begin{itemize}
+    \item 불필요한 3D 효과
+    \item 과도한 장식
+    \item 복잡한 배경
+    \item 너무 많은 정보
+\end{itemize}
+
+\subsection{3. 올바른 표시 방법 사용 (Use the Right Display)}
+
+\textbf{시각적 인코딩의 효율성 순서:}
+
+\begin{enumerate}
+    \item \textbf{가장 효율적 (정량적):}
+    \begin{itemize}
+        \item 위치 (Position)
+        \item 길이 (Length)
+    \end{itemize}
+    \item \textbf{중간 (정량적):}
+    \begin{itemize}
+        \item 기울기 (Slope)
+        \item 각도 (Angle)
+    \end{itemize}
+    \item \textbf{덜 효율적 (순서형):}
+    \begin{itemize}
+        \item 면적 (Area)
+        \item 강도 (Intensity)
+    \end{itemize}
+    \item \textbf{가장 비효율적 (범주형):}
+    \begin{itemize}
+        \item 색상 (Color)
+        \item 형태 (Shape)
+    \end{itemize}
+\end{enumerate}
+
+\textbf{함의:}
+\begin{itemize}
+    \item 정량적 데이터: 위치나 길이 사용 (예: 막대 그래프, 산점도)
+    \item 파이 차트보다 막대 그래프가 더 효과적
+\end{itemize}
+
+\subsection{4. 전략적으로 색상 사용 (Use Color Strategically)}
+
+\subsubsection{색상 스케일 유형}
+
+\begin{itemize}
+    \item \textbf{질적 스케일 (Qualitative Scale):}
+    \begin{itemize}
+        \item 범주형 데이터용
+        \item 구별되는 색상 사용
+        \item 한 번에 5-8개 색상 이하
+    \end{itemize}
+
+    \item \textbf{순차 스케일 (Sequential Scale):}
+    \begin{itemize}
+        \item 순서형 데이터용
+        \item 밝기와 채도를 변화시킴
+        \item 한 가지 색조 사용
+    \end{itemize}
+
+    \item \textbf{발산 스케일 (Diverging Scale):}
+    \begin{itemize}
+        \item 중간점이 있는 데이터용
+        \item 중간에서 양 극단으로 두 가지 색상
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{무지개 색상 맵 주의}
+
+\begin{itemize}
+    \item 지각적으로 균일하지 않음
+    \item 잘못된 패턴을 만들 수 있음
+    \item 흑백으로 인쇄하면 정보 손실
+\end{itemize}
+
+\subsubsection{색맹 고려}
+
+\begin{itemize}
+    \item \textbf{Protanope / Deuteranope:} 적/녹 색맹 (남성의 약 8\%)
+    \item \textbf{Tritanope:} 청/황 색맹 (드묾)
+    \item 색맹 친화적 팔레트 사용
+    \item 색상 외에 다른 시각적 단서 추가 (예: 패턴, 레이블)
+\end{itemize}
+
+\subsection{5. 청중 파악 (Know Your Audience)}
+
+다음을 고려하세요:
+\begin{itemize}
+    \item 그들은 무엇을 아는가?
+    \item 그들을 동기부여하는 것은? 무엇을 원하는가?
+    \item 공유하는 경험은? 공통 목표는?
+    \item 어떤 통찰력과 도구를 제공할 수 있는가?
+\end{itemize}
+
+\textbf{시각화 스타일:}
+\begin{itemize}
+    \item \textbf{설명적-중립적 (Explanatory Neutral):} 객관적 데이터 제시 (예: 대시보드)
+    \item \textbf{설명적-의견적 (Explanatory Opinionated):} 특정 메시지나 결론 전달 (예: 언론)
+\end{itemize}
+
+\section{Edward Tufte의 그래픽 우수성 원칙}
+
+\textit{Edward Tufte}는 데이터 시각화의 선구자입니다.
+
+\subsection{그래픽 우수성이란...}
+
+\begin{enumerate}
+    \item 흥미로운 데이터를 잘 디자인하여 제시하는 것 - 내용, 통계, 디자인의 문제
+
+    \item 명확성, 정확성, 효율성을 가진 복잡한 아이디어로 구성됨
+
+    \item 최소한의 잉크로 최소 공간에서 최단 시간에 보는 이에게 최대한 많은 아이디어를 제공하는 것
+
+    \item 거의 항상 다변량적임
+
+    \item 진실을 말하는 것을 요구함
+\end{enumerate}
+
+\section{실습 예제: 설문조사 데이터 분석}
+
+강의에서는 학생 설문조사 데이터를 사용하여 Pandas의 다양한 기능을 시연했습니다:
+
+\subsection{데이터 정리}
+
+\begin{lstlisting}[language=Python]
+# CSV 읽기
+df = pd.read_csv('data/survey_clean.csv')
+
+# 열 이름 정리 (소문자, 밑줄)
+clean_columns = ['timestamp', 'program', 'jupyter',
+                 'python_exp', 'panda_skill', ...]
+df.columns = clean_columns
+\end{lstlisting}
+
+\subsection{분석 질문 예시}
+
+\textbf{Q: 고유한 프로그램이 몇 개인가?}
+\begin{lstlisting}[language=Python]
+len(df['program'].unique())  # 60개
+\end{lstlisting}
+
+\textbf{Q: 각 프로그램에 몇 명이 있는가?}
+\begin{lstlisting}[language=Python]
+df['program'].value_counts()
+\end{lstlisting}
+
+\textbf{Q: 프로그램별 평균 Pandas 기술 수준은?}
+\begin{lstlisting}[language=Python]
+# 큰 프로그램만 선택
+big_programs = df['program'].value_counts() > 2
+big_prog_names = big_programs[big_programs].index
+
+# 필터링하고 그룹화
+df[df['program'].isin(big_prog_names)] \
+  .groupby('program').agg({'panda_skill': 'mean'}) \
+  .sort_values('panda_skill')
+\end{lstlisting}
+
+\textbf{Q: 학생들이 사용하는 언어는?}
+\begin{lstlisting}[language=Python]
+# 쉼표로 분리된 언어를 분할하고 확장
+languages = df['languages'].str.split(', ').explode()
+unique_languages = languages.unique()
+len(unique_languages)
+\end{lstlisting}
+
+\textbf{Q: 가장 많은 언어를 구사하는 학생은?}
+\begin{lstlisting}[language=Python]
+# 인덱스 재설정하여 학생 ID 유지
+df2 = df.reset_index()
+
+# 언어 분할 및 확장
+df2['lang'] = df2['languages'].str.split(', ')
+df2_exploded = df2.explode('lang')
+
+# 각 학생(인덱스)별 언어 개수 세기
+lang_counts = df2_exploded['index'].value_counts()
+lang_counts.head()  # 최대 5개 언어
+\end{lstlisting}
+
+\section{요약 및 핵심 포인트}
+
+\subsection{데이터에 관하여}
+\begin{itemize}
+    \item 데이터는 다양한 형태와 출처에서 나옴
+    \item 데이터 유형 이해가 중요: 정량적, 범주형, 순서형
+    \item 지저분한 데이터는 정리와 표 형식화가 필요
+    \item 표본은 편향을 가질 수 있으므로 주의 필요
+\end{itemize}
+
+\subsection{Pandas에 관하여}
+\begin{itemize}
+    \item Series와 DataFrame이 핵심 데이터 구조
+    \item Index는 위치가 아닌 레이블
+    \item 항상 정렬/필터링 후 인덱스 재설정
+    \item loc(레이블) vs iloc(위치) 구별
+    \item 불린 마스킹이 필터링의 핵심
+    \item 메서드 체이닝으로 깔끔한 코드 작성
+\end{itemize}
+
+\subsection{통계에 관하여}
+\begin{itemize}
+    \item 평균: 극단값에 민감
+    \item 중앙값: 더 강건함
+    \item 분산/표준편차: 산포도 측정
+    \item 범주형 변수에는 최빈값 사용
+\end{itemize}
+
+\subsection{시각화에 관하여}
+\begin{itemize}
+    \item 시각화는 패턴 발견과 소통에 필수
+    \item 올바른 차트 유형 선택이 중요
+    \item 그래픽 무결성 유지
+    \item 단순함이 최고
+    \item 색상을 전략적으로 사용
+    \item 청중을 항상 고려
+\end{itemize}
+
+\section{다음 단계}
+
+\begin{itemize}
+    \item 수요일 강의: 웹 스크래핑과 BeautifulSoup
+    \item HW1: 데이터 스크래핑과 Pandas 조작
+    \item Section: 설문조사 데이터로 시각화 연습 (Seaborn)
+\end{itemize}
+
+\end{document}

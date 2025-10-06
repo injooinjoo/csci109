@@ -1,0 +1,56 @@
+\contentsline {section}{\numberline {1}강의 개요 (Course Overview)}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}강의 목표 (Course Goals)}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}강사진 (Instructors)}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}데이터 과학의 역사와 발전 (History and Evolution of Data Science)}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}과학적 방법론의 변화 (Evolution of Scientific Methods)}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}데이터 과학의 응용 분야 (Applications)}{4}{subsection.2.2}%
+\contentsline {section}{\numberline {3}데이터 과학 프로세스 (The Data Science Process)}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}1단계: 질문 정의 (Ask an Interesting Question)}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}2단계: 데이터 수집 (Get the Data)}{4}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}3단계: 데이터 탐색 (Explore the Data)}{5}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}4단계: 모델링 (Model the Data)}{5}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}5단계: 결과 전달 (Communicate and Visualize Results)}{6}{subsection.3.5}%
+\contentsline {section}{\numberline {4}강의 구조 및 일정 (Course Structure and Schedule)}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}주간 일정 (Weekly Schedule)}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}강의 형식 (Course Format)}{6}{subsection.4.2}%
+\contentsline {section}{\numberline {5}성적 평가 (Grading)}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}평가 구성 (Grade Components)}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}숙제 정책 (Homework Policy)}{7}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}출석 정책 (Attendance Policy)}{7}{subsection.5.3}%
+\contentsline {section}{\numberline {6}프로젝트 (Course Project)}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}프로젝트 구조}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}평가 기준}{8}{subsection.6.2}%
+\contentsline {section}{\numberline {7}필수 도구 및 기술 (Required Tools and Skills)}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}프로그래밍 언어}{8}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}개발 환경}{9}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}버전 관리}{9}{subsection.7.3}%
+\contentsline {section}{\numberline {8}데이터 타입 및 시각화 기초 (Data Types and Visualization Basics)}{9}{section.8}%
+\contentsline {subsection}{\numberline {8.1}데이터 타입 분류}{9}{subsection.8.1}%
+\contentsline {subsubsection}{\numberline {8.1.1}양적 데이터 (Quantitative Data)}{9}{subsubsection.8.1.1}%
+\contentsline {subsubsection}{\numberline {8.1.2}질적 데이터 (Qualitative/Categorical Data)}{10}{subsubsection.8.1.2}%
+\contentsline {subsection}{\numberline {8.2}기술 통계량 (Descriptive Statistics)}{10}{subsection.8.2}%
+\contentsline {subsubsection}{\numberline {8.2.1}중심 경향성 (Measures of Central Tendency)}{10}{subsubsection.8.2.1}%
+\contentsline {subsubsection}{\numberline {8.2.2}산포도 (Measures of Spread)}{10}{subsubsection.8.2.2}%
+\contentsline {subsection}{\numberline {8.3}시각화 기법 (Visualization Techniques)}{11}{subsection.8.3}%
+\contentsline {subsubsection}{\numberline {8.3.1}단변량 시각화 (Univariate)}{11}{subsubsection.8.3.1}%
+\contentsline {subsubsection}{\numberline {8.3.2}이변량 시각화 (Bivariate)}{11}{subsubsection.8.3.2}%
+\contentsline {section}{\numberline {9}Teaching Fellows 및 지원 (Support Staff)}{12}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Teaching Fellows 팀}{12}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}학습 지원 자료}{12}{subsection.9.2}%
+\contentsline {section}{\numberline {10}자주 묻는 질문 (FAQ)}{13}{section.10}%
+\contentsline {subsection}{\numberline {10.1}강의 관련}{13}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}과제 및 평가}{13}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}기술적 질문}{13}{subsection.10.3}%
+\contentsline {section}{\numberline {11}학습 전략 및 조언 (Study Strategies)}{13}{section.11}%
+\contentsline {subsection}{\numberline {11.1}효과적인 학습 방법}{13}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}시간 관리}{14}{subsection.11.2}%
+\contentsline {section}{\numberline {12}핵심 개념 정리 (Key Concepts Summary)}{14}{section.12}%
+\contentsline {subsection}{\numberline {12.1}데이터 과학의 핵심 원칙}{14}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}수식 정리 (Formula Reference)}{15}{subsection.12.2}%
+\contentsline {section}{\numberline {13}다음 강의 예고 (Next Lecture Preview)}{15}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Lecture 2: 데이터 수집 및 처리}{15}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}준비 사항}{16}{subsection.13.2}%
+\contentsline {section}{\numberline {14}추가 학습 자료 (Additional Resources)}{16}{section.14}%
+\contentsline {subsection}{\numberline {14.1}추천 교재}{16}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.2}온라인 자료}{17}{subsection.14.2}%
+\contentsline {section}{\numberline {15}결론 (Conclusion)}{17}{section.15}%
