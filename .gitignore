@@ -19,3 +19,6 @@ coverage.xml
 .mypy_cache
 .pytest_cache
 .hypothesis
+
+# Large data files
+hw2/data/pppub24.csv
